@@ -1,0 +1,1108 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Đối soát Công tác phí</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: thanh công cụ trên cùng → dải tổng hợp → hai cột (danh sách nhân viên | hồ sơ đối chiếu của nhân viên) → phụ lục chính sách */
+:root{
+  --bg:#f4f6f5; --surface:#ffffff; --surface-2:#eef2f0; --line:#d9e1dd; --ink:#16241f; --muted:#5b6b65;
+  --accent:#0f6b5c; --accent-ink:#ffffff; --accent-soft:#dcefea;
+  --crit:#b42318; --crit-soft:#fde8e6; --warn:#b54708; --warn-soft:#fdeedc; --amber:#9a6700; --amber-soft:#fbf3d5;
+  --violet:#6941c6; --violet-soft:#efe9fb; --ok:#067647; --ok-soft:#dcf5e7;
+  --font-body:"Be Vietnam Pro", "Segoe UI", system-ui, sans-serif; --font-num:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1714; --surface:#16211d; --surface-2:#1c2a25; --line:#2a3a34; --ink:#e4ece8; --muted:#97a8a1;
+  --accent:#4cc2a8; --accent-ink:#06261f; --accent-soft:#163a32;
+  --crit:#ff8a7a; --crit-soft:#3a1916; --warn:#ffa65c; --warn-soft:#3a2412; --amber:#e8c45a; --amber-soft:#332a10;
+  --violet:#b9a3f5; --violet-soft:#271f3d; --ok:#5fd59a; --ok-soft:#123222; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0f1714; --surface:#16211d; --surface-2:#1c2a25; --line:#2a3a34; --ink:#e4ece8; --muted:#97a8a1;
+  --accent:#4cc2a8; --accent-ink:#06261f; --accent-soft:#163a32;
+  --crit:#ff8a7a; --crit-soft:#3a1916; --warn:#ffa65c; --warn-soft:#3a2412; --amber:#e8c45a; --amber-soft:#332a10;
+  --violet:#b9a3f5; --violet-soft:#271f3d; --ok:#5fd59a; --ok-soft:#123222; color-scheme:dark; }
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:14px; line-height:1.5; margin:0}
+.wrap{max-width:1440px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:16px 48px; display:flex; flex-direction:column; gap:16px}
+h1,h2,h3{margin:0; text-wrap:balance; font-weight:600}
+h1{font-size:20px; letter-spacing:-.01em}
+h2{font-size:16px}
+h3{font-size:14px}
+.num{font-family:var(--font-num); font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600}
+button,.btn{font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:6px; padding:7px 12px; display:inline-flex; align-items:center; gap:6px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.btn-primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600}
+input[type=text],input[type=number],select{font:inherit; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:7px 10px; min-width:0}
+
+/* thanh công cụ */
+.topbar{display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px}
+.brand{display:flex; flex-direction:column; gap:2px; min-width:0}
+.brand .sub{font-size:12px; color:var(--muted)}
+.tools{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.tools label{font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px}
+#fx{width:110px}
+.drop{border:1.5px dashed var(--line); border-radius:var(--r); padding:14px 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; background:var(--surface)}
+.drop.over{border-color:var(--accent); background:var(--accent-soft)}
+.drop p{margin:0}
+.steps{display:flex; flex-direction:column; gap:8px; min-width:0; flex:1 1 420px}
+.step{display:flex; gap:10px; align-items:flex-start}
+.sn{flex:none; width:22px; height:22px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:12px; display:grid; place-items:center}
+button:disabled{opacity:.45; cursor:not-allowed}
+button:disabled:hover{border-color:var(--line)}
+.btn-export:not(:disabled){border-color:var(--accent); color:var(--accent); font-weight:600}
+.linkish{border-color:transparent; background:transparent; color:var(--muted); text-decoration:underline}
+#fileInfo.ready{color:var(--accent); font-weight:600}
+.banner{border-radius:var(--r); padding:10px 14px; font-size:13px; display:flex; gap:10px; align-items:flex-start}
+.banner.sample{background:var(--amber-soft); color:var(--ink); border:1px solid var(--line)}
+.banner.err{background:var(--crit-soft); color:var(--crit); border:1px solid var(--line)}
+.warnlist{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; font-size:13px}
+
+/* dải tổng hợp */
+.strip{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.kpi{background:var(--surface); padding:12px 14px; display:flex; flex-direction:column; gap:4px; min-width:0}
+.kpi .v{font-family:var(--font-num); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px; color:var(--muted)}
+.kpi.crit .v{color:var(--crit)} .kpi.amber .v{color:var(--amber)} .kpi.ok .v{color:var(--ok)}
+
+/* hai cột */
+.main{display:grid; grid-template-columns:minmax(300px, 380px) minmax(0,1fr); gap:16px; align-items:start}
+@media (max-width: 900px){ .main{grid-template-columns:minmax(0,1fr)} }
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); min-width:0}
+.panel-h{padding:12px 14px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:10px}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{font-size:12px; padding:4px 10px; border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.emp-list{list-style:none; margin:0; padding:0; max-height:calc(100vh - 140px); overflow:auto}
+@media (max-width: 900px){ .emp-list{max-height:420px} }
+.emp{display:grid; grid-template-columns:4px minmax(0,1fr) auto; gap:0 10px; padding:10px 14px 10px 0; border-bottom:1px solid var(--line); cursor:pointer; align-items:center}
+.emp:hover{background:var(--surface-2)}
+.emp[aria-selected="true"]{background:var(--accent-soft)}
+.emp .stripe{align-self:stretch; border-radius:0 3px 3px 0}
+.emp .nm{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.emp .meta{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.emp .amt{text-align:right; font-size:12px; display:flex; flex-direction:column; gap:2px}
+.s-bad{background:var(--crit)} .s-warn{background:var(--amber)} .s-ok{background:var(--ok)}
+
+.pill{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap}
+.k-over,.k-arith{background:var(--crit-soft); color:var(--crit)}
+.k-nobasis{background:var(--warn-soft); color:var(--warn)}
+.k-verify{background:var(--amber-soft); color:var(--amber)}
+.k-out{background:var(--violet-soft); color:var(--violet)}
+.k-ok{background:var(--ok-soft); color:var(--ok)}
+.st-bad{background:var(--crit-soft); color:var(--crit)} .st-warn{background:var(--amber-soft); color:var(--amber)} .st-ok{background:var(--ok-soft); color:var(--ok)}
+.daytbl{max-height:70vh; overflow:auto}
+.daytbl td{border-right:1px solid var(--line)}
+.daytbl td:last-child{border-right:0}
+.dc{min-width:118px}
+.dc .amt{display:block; font-weight:600}
+.cap{display:block; font-size:11.5px; color:var(--muted)}
+.dc .pill{margin-top:3px}
+.empty-c{color:var(--muted); text-align:center}
+
+/* hồ sơ nhân viên */
+.detail{display:flex; flex-direction:column; gap:0}
+.d-head{padding:16px; display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--line)}
+.d-head .who{display:flex; flex-direction:column; gap:4px; min-width:0}
+.d-head .tags{display:flex; flex-wrap:wrap; gap:6px; font-size:12px; color:var(--muted)}
+.tag{border:1px solid var(--line); border-radius:4px; padding:1px 7px}
+.d-tiles{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:1px; background:var(--line); border-bottom:1px solid var(--line)}
+.d-tiles .kpi .v{font-size:17px}
+.sec{padding:16px; display:flex; flex-direction:column; gap:10px; border-bottom:1px solid var(--line); min-width:0}
+.sec:last-child{border-bottom:0}
+.sec-h{display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:baseline}
+.tbl-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:6px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 10px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line)}
+th{font-size:11.5px; font-weight:600; color:var(--muted); background:var(--surface-2); white-space:nowrap; position:sticky; top:0}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+td.num,td .num{white-space:nowrap}
+tfoot td{font-weight:600; background:var(--surface-2)}
+.find{display:grid; grid-template-columns:4px minmax(0,1fr); border:1px solid var(--line); border-radius:6px; overflow:hidden}
+.find .bar{background:var(--line)}
+.find.f-over .bar,.find.f-arith .bar{background:var(--crit)} .find.f-nobasis .bar{background:var(--warn)} .find.f-verify .bar{background:var(--amber)} .find.f-out .bar{background:var(--violet)} .find.f-ok .bar{background:var(--ok)}
+.find .body{padding:10px 12px; display:flex; flex-direction:column; gap:6px; min-width:0}
+.find .top{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center}
+.find .ttl{font-weight:600}
+.find .figs{display:flex; flex-wrap:wrap; gap:4px 18px; font-size:12.5px}
+.find .figs b{font-family:var(--font-num); font-weight:600}
+.find .row2{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:6px 18px; font-size:13px}
+@media (max-width: 640px){ .find .row2{grid-template-columns:minmax(0,1fr)} }
+.find .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; display:block}
+.find .basis{font-size:12px; color:var(--muted)}
+.find .days{font-size:12px; color:var(--muted); font-family:var(--font-num)}
+.flist{display:flex; flex-direction:column; gap:8px}
+details>summary{cursor:pointer; font-weight:600; list-style:none; display:flex; align-items:center; gap:8px}
+details>summary::before{content:"›"; display:inline-block; transition:transform .15s; color:var(--muted)}
+details[open]>summary::before{transform:rotate(90deg)}
+@media (prefers-reduced-motion: reduce){ details>summary::before{transition:none} }
+.flag{font-size:11px; font-weight:600}
+.empty{padding:40px 16px; text-align:center; color:var(--muted)}
+.policy{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px}
+.policy-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:16px; margin-top:12px}
+.policy-grid > div{min-width:0; display:flex; flex-direction:column; gap:8px}
+.note{font-size:12px; color:var(--muted)}
+.toast{position:fixed; bottom:calc(16px + env(safe-area-inset-bottom, 0px)); right:max(16px, env(safe-area-inset-right, 0px)); background:var(--ink); color:var(--bg); padding:8px 14px; border-radius:6px; font-size:13px}
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Đối soát Công tác phí</h1>
+      <span class="sub" id="polver">Kiểm tra từng nhân viên theo chính sách CTP hợp nhất</span>
+    </div>
+    <div class="tools">
+      <label for="fx">Tỷ giá USD/VND <input id="fx" type="number" min="0" step="1" placeholder="vd. 25.400"></label>
+      <button id="btnCopy" type="button" title="Sao chép báo cáo nhân viên đang xem">Sao chép báo cáo NV</button>
+    </div>
+  </header>
+
+  <section class="drop" id="drop" aria-label="Tải file công tác phí">
+    <div class="steps">
+      <div class="step"><span class="sn">1</span><div><strong>Tải file Excel</strong> theo mẫu <span class="num">CTP_Check_Tool</span> (sheet <b>Input_CTP</b>, <b>Work Travel History</b>, <b>MASTER NHANVIEN</b>). Kéo thả vào đây hoặc chọn file.
+        <div class="note" id="fileInfo">Chưa chọn file. File được đọc ngay trên trình duyệt, không gửi đi đâu.</div></div></div>
+      <div class="step"><span class="sn">2</span><div><strong>Kiểm tra</strong> đối chiếu định mức; Grade C, D đối chiếu đầy đủ với Work Travel, cấp quản lý E–I chỉ đối chiếu giờ đi/đến khi có phiếu.</div></div>
+      <div class="step"><span class="sn">3</span><div><strong>Xuất file Excel</strong> kết quả kiểm tra.</div></div>
+    </div>
+    <div class="tools">
+      <input id="file" type="file" accept=".xlsx,.xlsm,.xls" hidden>
+      <button id="btnPick" type="button">Chọn file Excel</button>
+      <button class="btn-primary" id="btnRun" type="button" disabled>Kiểm tra</button>
+      <button class="btn-export" id="btnExport" type="button" disabled>Xuất file Excel</button>
+      <button id="btnSample" type="button" class="linkish">Xem ví dụ</button>
+    </div>
+  </section>
+
+  <div id="msg"></div>
+  <section class="strip" id="strip" aria-label="Tổng hợp"></section>
+  <div id="warns"></div>
+
+  <section class="main">
+    <aside class="panel" aria-label="Danh sách nhân viên">
+      <div class="panel-h">
+        <div class="sec-h"><h2>Nhân viên</h2><span class="note" id="cnt"></span></div>
+        <input id="q" type="text" placeholder="Tìm theo tên hoặc mã NV" aria-label="Tìm nhân viên">
+        <div class="chips" id="chips" role="group" aria-label="Lọc theo kết luận"></div>
+        <label class="note" for="sort">Sắp xếp
+          <select id="sort"><option value="reject">Tiền đề xuất loại</option><option value="verify">Tiền chờ xác minh</option><option value="total">Tổng đề nghị</option><option value="name">Tên A–Z</option></select>
+        </label>
+      </div>
+      <ul class="emp-list" id="list" role="listbox" aria-label="Nhân viên"></ul>
+    </aside>
+    <article class="panel detail" id="detail" aria-live="polite"></article>
+  </section>
+
+  <section class="policy" aria-label="Chính sách áp dụng">
+    <details id="polbox">
+      <summary>Căn cứ chính sách và giả định đang áp dụng</summary>
+      <div class="policy-grid" id="policy"></div>
+    </details>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ===== CTP ENGINE – kiểm tra công tác phí theo chính sách (bản hợp nhất 27–28/10/2026) ===== */
+const POLICY = {
+  version: 'Chính sách CTP hợp nhất – cập nhật 27/10/2026; khoản hỗ trợ xác nhận 28/10/2026',
+  meal: {A:150000,B:150000,C:150000,D:150000,E:180000,F:180000,G:250000,H:250000,I:250000,J:300000,Q:300000},
+  hotel: {
+    A:{HN_HCM:700000,OTHER:400000}, B:{HN_HCM:700000,OTHER:400000},
+    C:{HN_HCM:700000,TIER1:500000,OTHER:400000}, D:{HN_HCM:700000,TIER1:500000,OTHER:400000},
+    E:{HN_HCM:900000,TIER1:700000,OTHER:500000}, F:{HN_HCM:900000,TIER1:700000,OTHER:500000},
+    G:{HN_HCM:1500000,TIER1:1200000,OTHER:750000}, H:{HN_HCM:1500000,TIER1:1200000,OTHER:750000},
+    I:{HN_HCM:1500000,TIER1:1200000,OTHER:750000}, J:{ALL:'Actual'}, Q:{ALL:'Actual'}
+  },
+  tier1: ['Thái Nguyên','Vinh','Hải Dương','Hạ Long','Bắc Ninh','Việt Trì','Nam Định','Hải Phòng','Biên Hòa','Thanh Hóa','Cần Thơ','Đồng Nai','Quảng Ninh'],
+  cgfHotel: {C:300000,D:300000,E:400000,F:400000},
+  cgfNightLimit: {C:6,D:6},
+  travel: {C:120000,D:120000,E:120000,F:120000},
+  travelKm: {rate:2000, minKm:20},
+  ent: [
+    ['B','Swine Sale',2500000],['C','Swine Sale',2500000],['D','Swine Sale',2500000],
+    ['E','Farm production',2000000],['F','Farm production',2000000],
+    ['E','Swine Sale',4000000],['F','Swine Sale',4000000],
+    ['E','Swine Farm Development',4000000],['F','Swine Farm Development',4000000],
+    ['G','Farm production',4000000],['G','Swine Sale',15000000],['G','Swine Farm Development',15000000],
+    ['H','Farm production',10000000],['H','Swine Sale',15000000],['H','Swine Farm Development',15000000],
+    ['I','Farm production',20000000],['I','Swine Farm Development','Actual'],
+    ['J','BOD','Actual'],['Q','BOD','Actual']
+  ],
+  foreign: {A:[60,150,40],B:[60,150,40],C:[60,150,40],D:[60,150,40],E:[60,200,50],F:[60,200,50],G:[85,250,60],H:[85,250,60],I:[85,250,60]},
+  deptAlias: {'cgf':'Swine Farm Development','farm development':'Swine Farm Development','swine farm development':'Swine Farm Development',
+    'swine farm relation':'Swine Farm Development','farm production':'Farm production','swine sale':'Swine Sale','bod':'BOD'},
+  mealSplit: {B:0.2, L:0.4, D:0.4},
+  // Điều kiện giờ (phút): ngày đi – khởi hành TRƯỚC mốc; ngày về – đến SAU mốc
+  mealTime: {B:{dep:360, arr:480}, L:{dep:660, arr:780}, D:{dep:1020, arr:1200}},
+  roomSupport: [{code:'10111566', name:'nguyễn huy tài', monthly:2000000}],
+  // Cập nhật Grade theo xác nhận của người dùng 12/11/2026 (ưu tiên hơn Input_CTP và MASTER NHANVIEN)
+  gradeOverride: [{code:'10027761', name:'luong van hung', grade:'G', note:'F → G (xác nhận 12/11/2026)'},
+                  {code:'10003245', name:'hoang xuan tinh', grade:'G', note:'F → G (xác nhận 12/11/2026)'}]
+};
+const CAT_TEST = {
+  meal: it=>/Tiền ăn|^Ăn|Total Meal/.test(it), hotel: it=>/Khách sạn|đêm KS/.test(it), trans: it=>/Đi lại/.test(it),
+  room: it=>/Nhà trọ/.test(it), vTrans: it=>/VAT Transportation/.test(it), ent: it=>/Tiếp khách/.test(it), other: it=>/Incidental|International|VAT Others/.test(it)
+};
+const CAT_NAME = {meal:'Tiền ăn', hotel:'Khách sạn', trans:'Đi lại', room:'Nhà trọ', vTrans:'Vé xe (VAT)', ent:'Tiếp khách', other:'Khác'};
+const WT_FULL = ['A','B','C','D']; // đối chiếu Work Travel đầy đủ; các Grade khác chỉ đối chiếu giờ đi/đến khi có phiếu
+const GRADES = 'ABCDEFGHIJQ';
+const TONE = [['oà','òa'],['oá','óa'],['oả','ỏa'],['oã','õa'],['oạ','ọa'],['uỳ','ùy'],['uý','úy'],['uỷ','ủy'],['uỹ','ũy'],['uỵ','ụy']];
+function norm(s){ s = String(s==null?'':s).normalize('NFC').toLowerCase(); for (const [a,b] of TONE) s = s.split(a).join(b); return s.replace(/\s+/g,' ').trim(); }
+function esc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function hasWord(t, kw){ return new RegExp('(?<![\\p{L}\\p{N}])'+esc(norm(kw))+'(?![\\p{L}\\p{N}])','u').test(t); }
+const HN_KW = ['hà nội','ha noi','hồ chí minh','ho chi minh','tp.hcm','tp hcm','tphcm','tp. hcm','hcm','sài gòn'];
+const CITY_ALIAS = {'Quảng Ninh':['hạ long'],'Đồng Nai':['biên hòa']};
+const VINH_RE = /(^|[,\-_(]\s*|tp\.?\s*|thành phố\s*)vinh(\s*$|\s*[,)\-_]|\s+nghệ an)/u;
+function classifyPlace(p){
+  const t = norm(p);
+  if (HN_KW.some(k=>hasWord(t,k))) return 'HN_HCM';
+  for (const c of POLICY.tier1){
+    if (c==='Vinh'){ if (VINH_RE.test(t)) return 'TIER1'; continue; }
+    if ([c].concat(CITY_ALIAS[c]||[]).some(k=>hasWord(t,k))) return 'TIER1';
+  }
+  return 'OTHER';
+}
+/* Tỉnh/thành (gồm tên cũ trước sáp nhập 2025 → quy về tỉnh mới) để so lịch trình */
+const PROV = {
+  'Hà Nội':['hà nội','ha noi'], 'Huế':['huế','thừa thiên'], 'Lai Châu':['lai châu'], 'Điện Biên':['điện biên'], 'Sơn La':['sơn la'],
+  'Lạng Sơn':['lạng sơn'], 'Quảng Ninh':['quảng ninh','hạ long','móng cái','cẩm phả','uông bí'], 'Thanh Hóa':['thanh hóa'], 'Nghệ An':['nghệ an'],
+  'Hà Tĩnh':['hà tĩnh'], 'Cao Bằng':['cao bằng'], 'Tuyên Quang':['tuyên quang','hà giang'], 'Lào Cai':['lào cai','yên bái','nghĩa lộ'],
+  'Thái Nguyên':['thái nguyên','bắc kạn','bắc cạn'], 'Phú Thọ':['phú thọ','vĩnh phúc','vĩnh yên','hòa bình','việt trì','hương canh','hcfm'],
+  'Bắc Ninh':['bắc ninh','bắc giang'], 'Hưng Yên':['hưng yên','thái bình'], 'Hải Phòng':['hải phòng','hải dương'],
+  'Ninh Bình':['ninh bình','hà nam','nam định'], 'Quảng Trị':['quảng trị','quảng bình'], 'Đà Nẵng':['đà nẵng','quảng nam'],
+  'Quảng Ngãi':['quảng ngãi','kon tum'], 'Gia Lai':['gia lai','bình định'], 'Khánh Hòa':['khánh hòa','ninh thuận','nha trang'],
+  'Lâm Đồng':['lâm đồng','đắk nông','đắc nông','bình thuận','đà lạt'], 'Đắk Lắk':['đắk lắk','đắc lắk','phú yên','buôn ma thuột','buôn mê thuột'],
+  'TP.HCM':['hồ chí minh','ho chi minh','hcm','tp.hcm','tphcm','sài gòn','bình dương','bà rịa','vũng tàu'], 'Đồng Nai':['đồng nai','bình phước','biên hòa'],
+  'Tây Ninh':['tây ninh','long an'], 'Cần Thơ':['cần thơ','sóc trăng','hậu giang'], 'Vĩnh Long':['vĩnh long','bến tre','trà vinh'],
+  'Đồng Tháp':['đồng tháp','tiền giang'], 'Cà Mau':['cà mau','bạc liêu'], 'An Giang':['an giang','kiên giang']
+};
+function provincesOf(s){
+  const t = norm(s), out = new Set();
+  for (const [p, kws] of Object.entries(PROV)) if (kws.some(k=>hasWord(t,k))) out.add(p);
+  return out;
+}
+const TIER_LABEL ={HN_HCM:'Hà Nội/HCM', TIER1:'TP loại 1', OTHER:'Khác'};
+function splitPlaces(loc){ return String(loc||'').split(/\s+-\s+|\s*–\s*|\s*→\s*/).map(s=>s.trim()).filter(Boolean); }
+const FOREIGN_KW = ['nước ngoài','thái lan','trung quốc','singapore','malaysia','indonesia','philippines','campuchia','lào','myanmar','hàn quốc','nhật bản','đài loan','hồng kông','ấn độ','úc','new zealand','bangkok','thailand','china','korea','japan','taiwan','hong kong','cambodia','laos'];
+function isForeignLoc(loc){ const t = norm(loc).replace(/lào cai/gu,' '); return FOREIGN_KW.some(k=>hasWord(t,k)); }
+function deptKey(d){ return POLICY.deptAlias[norm(d)] || String(d||'').trim(); }
+function num(v){ if (typeof v==='number') return v; if (v==null||v==='') return 0; const n = Number(String(v).replace(/[,\s]/g,'')); return isFinite(n)?n:0; }
+
+/* ---- ngày giờ ---- */
+function serialDay(v){
+  if (v==null||v==='') return null;
+  if (v instanceof Date) return Math.floor((Date.UTC(v.getFullYear(),v.getMonth(),v.getDate()) - Date.UTC(1899,11,30))/864e5);
+  if (typeof v==='number') return Math.floor(v);
+  const m = String(v).trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+  if (m) return Math.round((Date.UTC(+m[3],+m[2]-1,+m[1]) - Date.UTC(1899,11,30))/864e5);
+  const m2 = String(v).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m2) return Math.round((Date.UTC(+m2[1],+m2[2]-1,+m2[3]) - Date.UTC(1899,11,30))/864e5);
+  return null;
+}
+function minutesOf(v){
+  if (v==null||v==='') return null;
+  if (v instanceof Date) return v.getHours()*60+v.getMinutes();
+  if (typeof v==='number') return Math.round((v - Math.floor(v))*1440);
+  const m = String(v).match(/(\d{1,2}):(\d{2})/); return m ? (+m[1])*60+(+m[2]) : null;
+}
+function fmtDay(s){ if (s==null) return ''; const d = new Date(Date.UTC(1899,11,30)+s*864e5); return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear(); }
+function monthKey(s){ const d = new Date(Date.UTC(1899,11,30)+s*864e5); return String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear(); }
+function fmtMin(m){ return m==null?'?':String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+function vnd(n){ return (Math.round(n)||0).toLocaleString('vi-VN'); }
+
+/* ---- tìm cột theo tiêu đề ---- */
+function findHeader(aoa, must, maxScan){
+  for (let i=0;i<Math.min(aoa.length, maxScan||15);i++){
+    const r = (aoa[i]||[]).map(norm);
+    if (must.every(m=>r.some(c=>c.startsWith(norm(m))))) return i;
+  }
+  return -1;
+}
+function colMap(hdr, spec){
+  const H = hdr.map(norm), out = {};
+  for (const [k, names, exact] of spec){
+    let idx = -1;
+    for (const n of [].concat(names)){
+      const nn = norm(n);
+      idx = H.findIndex(h=> exact ? h===nn : h.startsWith(nn));
+      if (idx>=0) break;
+    }
+    out[k] = idx;
+  }
+  return out;
+}
+const INPUT_SPEC = [
+  ['doc','document no'],['status','document status'],['att','attendance type'],['emp',['empl. code','empl code','mã nv']],
+  ['name',"claimer's name"],['unit','unit, dept'],['date','date',true],['req','travel requisition'],['loc','location'],
+  ['tStart','deviant time start'],['tEnd','deviant time end'],['km','km',true],['trans','transportation',true],
+  ['room','room rental'],['mB','meal breakfast'],['mL','meal lunch'],['mD','meal dinner'],['mN','meal night'],
+  ['mH','meal half day'],['mF','meal full day'],['meal','total meal'],['incid','incidental'],['vTrans','vat transportation'],
+  ['ent','vat entertainment'],['hotel','vat hotel'],['vOther','vat others'],['total','total cost'],['dept','phòng ban'],['grade','grade',true]
+];
+const WT_SPEC = [['doc','document no'],['type','document type'],['status','status',true],['name','full name'],['sap','sapid'],
+  ['dept','department'],['from','from date'],['to','to date'],['mode','mode of transportation'],['acc','accommodation'],['purpose','purpose'],['dest','destination']];
+const MASTER_SPEC = [['code','pers. number'],['name','name/'],['grade','grade',true],['dept','dept.']];
+
+/* ================= MAIN ================= */
+function runCheck(book, opts){
+  opts = opts || {};
+  const fx = num(opts.fx);
+  const warnings = [];
+  // ---- Input
+  const inA = book.input; if (!inA) throw new Error('Không tìm thấy sheet Input_CTP trong file.');
+  const hi = findHeader(inA, ['document no','date']); if (hi<0) throw new Error('Sheet Input_CTP: không tìm thấy dòng tiêu đề (cần cột "Document No", "Date").');
+  const C = colMap(inA[hi], INPUT_SPEC);
+  for (const k of ['doc','emp','date','meal','hotel','total']) if (C[k]<0) throw new Error('Sheet Input_CTP thiếu cột bắt buộc: '+k);
+  // ---- Master NV
+  const master = {};
+  if (book.master){
+    const mh = findHeader(book.master, ['pers. number','grade'], 10);
+    if (mh>=0){ const M = colMap(book.master[mh], MASTER_SPEC);
+      for (let i=mh+1;i<book.master.length;i++){ const r = book.master[i]||[]; const c = String(r[M.code]||'').trim(); if (!c) continue;
+        master[c] = {grade:String(r[M.grade]||'').trim().toUpperCase(), dept:String(r[M.dept]||'').trim(), name:r[M.name]}; } }
+  } else warnings.push('Không có sheet MASTER NHANVIEN – không đối chiếu được Grade/Phòng ban.');
+  // ---- Work Travel
+  const wtByEmp = {}, wtByDoc = {};
+  let wtCount = 0;
+  if (book.wt){
+    const wh = findHeader(book.wt, ['document no','sapid'], 10);
+    if (wh>=0){ const W = colMap(book.wt[wh], WT_SPEC);
+      for (let i=wh+1;i<book.wt.length;i++){ const r = book.wt[i]||[]; if (!r[W.doc]) continue;
+        const f = {doc:String(r[W.doc]).trim(), sap:String(r[W.sap]||'').trim(), name:r[W.name], status:r[W.status]||'',
+          fromRaw:r[W.from], toRaw:r[W.to], fromDay:serialDay(r[W.from]), toDay:serialDay(r[W.to]), dep:minutesOf(r[W.from]), arr:minutesOf(r[W.to]),
+          mode:r[W.mode]||'', acc:r[W.acc]||'', purpose:r[W.purpose]||'', dest:r[W.dest]||''};
+        if (f.fromDay==null||f.toDay==null) continue;
+        wtCount++; (wtByEmp[f.sap] = wtByEmp[f.sap]||[]).push(f); wtByDoc[f.doc] = f; } }
+    else warnings.push('Sheet Work Travel History không đúng cấu trúc – bỏ qua đối chiếu phiếu công tác.');
+  } else warnings.push('Không có sheet Work Travel History – không đối chiếu được phiếu công tác và điều kiện giờ đi/đến.');
+  const hasWT = wtCount>0;
+
+  // ---- đọc dòng
+  const rows = [], excluded = [];
+  for (let i=hi+1;i<inA.length;i++){
+    const r = inA[i]||[]; if (!r[C.doc]) continue;
+    const g = k => C[k]>=0 ? r[C[k]] : null;
+    const rec = {row:i+1, doc:String(g('doc')).trim(), att:String(g('att')||'').trim(), emp:String(g('emp')||'').trim(), name:String(g('name')||'').trim(),
+      unit:g('unit')||'', day:serialDay(g('date')), req:String(g('req')==null?'':g('req')).trim(), loc:String(g('loc')||'').trim(),
+      km:num(g('km')), trans:num(g('trans')), room:num(g('room')), mB:num(g('mB')), mL:num(g('mL')), mD:num(g('mD')), mN:num(g('mN')),
+      mH:num(g('mH')), mF:num(g('mF')), meal:num(g('meal')), incid:num(g('incid')), vTrans:num(g('vTrans')), ent:num(g('ent')),
+      hotel:num(g('hotel')), vOther:num(g('vOther')), total:num(g('total')), deptRaw:String(g('dept')||'').trim(), gradeRaw:String(g('grade')||'').trim().toUpperCase()};
+    if (rec.req==='0') rec.req='';
+    const ms = master[rec.emp];
+    rec.grade = rec.gradeRaw; rec.gradeSrc = 'Input_CTP';
+    if (!GRADES.includes(rec.grade) || rec.grade.length!==1){
+      if (ms && GRADES.includes(ms.grade) && ms.grade.length===1){ rec.grade = ms.grade; rec.gradeSrc = 'MASTER NHANVIEN'; }
+      else { excluded.push(rec); continue; }
+    }
+    const ov = POLICY.gradeOverride.find(o=>o.code===rec.emp || norm(rec.name)===o.name);
+    if (ov && ov.grade!==rec.grade){ rec.gradeOld = rec.grade; rec.grade = ov.grade; rec.gradeSrc = 'Cập nhật: '+ov.note; }
+    rec.dept = rec.deptRaw || (ms ? ms.dept : '');
+    rec.master = ms;
+    if (rec.day==null){ excluded.push(rec); continue; }
+    rows.push(rec);
+  }
+
+  const F = []; // findings
+  // Chỉ đạo 12/11/2026: mọi khoản thanh toán ≤ định mức đều ĐẠT. Các điểm đối chiếu không làm phát sinh tiền vượt
+  // (lịch trình, lưu trú, ngày về, trạng thái/số phiếu, Grade, trùng dòng cùng chứng từ, chạm giới hạn đêm CGF) chỉ ghi chú tham khảo.
+  const add = (rec, o) => (o.kind===KIND.VERIFY && !o.amount && !/nước ngoài|International/.test(o.item))
+    ? (rec.notes = rec.notes||[]).push(o.item+': '+o.cause)
+    : F.push(Object.assign({emp:rec.emp, name:rec.name, grade:rec.grade, dept:rec.dept, day:rec.day, doc:rec.doc, req:rec.req, loc:rec.loc, row:rec.row}, o));
+  const KIND = {OVER:'Vượt định mức', NOBASIS:'Thiếu căn cứ', VERIFY:'Cần xác minh', OUT:'Ngoài danh mục', ARITH:'Sai số học', OK:'Hỗ trợ đã duyệt'};
+
+  // ---- 0. Grade / phòng ban khác MASTER
+  const seenG = new Set();
+  for (const r of rows){
+    if (seenG.has(r.emp)) continue; seenG.add(r.emp);
+    if (r.gradeSrc==='MASTER NHANVIEN') add(r,{item:'Grade', kind:KIND.VERIFY, claimed:0, cap:null, amount:0,
+      cause:`Cột Grade trên Input_CTP trống/lỗi; App lấy Grade ${r.grade} từ MASTER NHANVIEN.`, action:'Xác nhận Grade với HR trước khi chốt thanh toán.', basis:'Quy trình kiểm tra – Grade lỗi'});
+    else if (r.gradeOld) { /* Grade đã được người dùng xác nhận cập nhật – không báo lệch */ }
+    else if (r.master && r.master.grade && r.master.grade!==r.grade) add(r,{item:'Grade', kind:KIND.VERIFY, claimed:0, cap:null, amount:0,
+      cause:`Grade trên Input_CTP (${r.grade}) khác MASTER NHANVIEN (${r.master.grade}).`, action:'Xác nhận Grade đúng với HR; nếu sai Grade thì tính lại định mức.', basis:'MASTER NHANVIEN'});
+  }
+
+  // ---- 1. Sai số học
+  for (const r of rows){
+    const comp = r.mB+r.mL+r.mD+r.mN+r.mH+r.mF;
+    if (Math.abs(comp - r.meal) > 1 && comp>0) add(r,{item:'Total Meal', kind:KIND.ARITH, claimed:r.meal, cap:comp, amount:Math.max(0,r.meal-comp),
+      cause:`Total Meal ${vnd(r.meal)} ≠ tổng các bữa ${vnd(comp)}.`, action:'Yêu cầu nhân viên sửa lại dòng khai; thanh toán theo số đúng sau khi sửa.', basis:'Kiểm tra số học'});
+    const sum = r.trans+r.room+r.meal+r.incid+r.vTrans+r.ent+r.hotel+r.vOther;
+    if (Math.abs(sum - r.total) > 1) add(r,{item:'Total Cost', kind:KIND.ARITH, claimed:r.total, cap:sum, amount:Math.max(0,r.total-sum),
+      cause:`Total Cost ${vnd(r.total)} ≠ tổng các khoản ${vnd(sum)}.`, action:'Đối chiếu lại các khoản; thanh toán theo tổng các khoản hợp lệ.', basis:'Kiểm tra số học'});
+  }
+
+  // ---- 2. Trùng ngày
+  const byED = {};
+  for (const r of rows){ const k = r.emp+'|'+r.day; (byED[k]=byED[k]||[]).push(r); }
+  for (const list of Object.values(byED)){
+    const withAmt = list.filter(x=>x.total>0);
+    if (withAmt.length>1){ const docs = [...new Set(withAmt.map(x=>x.doc))];
+      add(withAmt[1],{item:'Trùng ngày', kind: docs.length>1?KIND.NOBASIS:KIND.VERIFY, claimed:withAmt.slice(1).reduce((s,x)=>s+x.total,0), cap:null,
+        amount: docs.length>1 ? withAmt.slice(1).reduce((s,x)=>s+x.total,0) : 0,
+        cause:`${withAmt.length} dòng có phát sinh tiền cùng ngày${docs.length>1?' trên các chứng từ '+docs.join(', '):''}.`,
+        action: docs.length>1 ? 'Nghi thanh toán trùng giữa hai bộ chứng từ – giữ lại một dòng, loại phần trùng.' : 'Kiểm tra lý do tách dòng; bảo đảm định mức ngày tính trên tổng.', basis:'Kiểm soát trùng lặp'}); }
+  }
+
+  // ---- phiếu công tác bao phủ
+  function cover(r){
+    const list = (wtByEmp[r.emp]||[]).filter(f=>f.fromDay<=r.day && r.day<=f.toDay);
+    return list;
+  }
+  const covMap = new Map();
+  for (const r of rows) covMap.set(r, hasWT ? cover(r) : null);
+
+  // ---- 3. Ngày nghỉ / không có phiếu
+  for (const r of rows){
+    if (r.total<=0) continue;
+    const ln = norm(r.loc);
+    if (r.att==='AL01' || /nghỉ phép|nghỉ bù|nghỉ ốm/u.test(ln)){
+      add(r,{item:'Ngày nghỉ', kind:KIND.NOBASIS, claimed:r.total, cap:0, amount:r.total,
+        cause:`Ngày ${fmtDay(r.day)} ghi nhận là ngày nghỉ (${r.att||''} ${r.loc}) nhưng có khai ${vnd(r.total)}.`, action:'Loại toàn bộ khoản khai ngày nghỉ, trừ khi có quyết định cử đi công tác thay ngày nghỉ.', basis:'Nguyên tắc CTP chỉ chi cho ngày đi công tác'});
+      r._excludedDay = true; continue;
+    }
+    if (!hasWT) continue;
+    // Quy tắc đối chiếu Work Travel (chỉ đạo 12/11/2026):
+    //  - Ngày không có phiếu Work Travel bao phủ: bỏ qua đối chiếu (mọi Grade).
+    //  - Grade A–D: ngày có phiếu → đối chiếu đầy đủ (lịch trình, giờ đi/đến, lưu trú, trạng thái, số phiếu).
+    //  - Grade E–I (và J, Q): bỏ qua kiểm tra Work Travel; chỉ khi có phiếu đi công tác mới đối chiếu giờ đi/giờ đến.
+    const cv = covMap.get(r) || [];
+    r.wtMode = WT_FULL.includes(r.grade) ? 'full' : 'time';
+    if (!cv.length){ r._skipWT = true; continue; }
+    r.wtDocs = cv.map(f=>f.doc).join(', ');
+    if (r.wtMode!=='full') continue;
+    const pc = provincesOf(r.loc), pw = new Set(); cv.forEach(f=>provincesOf(f.dest+' ; '+f.purpose).forEach(p=>pw.add(p)));
+    const regional = cv.some(f=>/miền (bắc|nam|trung)|các tỉnh|các trại|các trang trại|toàn quốc|nhiều tỉnh/u.test(norm(f.dest+' '+f.purpose)));
+    if (!regional && pc.size && pw.size && ![...pc].some(p=>pw.has(p)))
+      add(r,{item:'Lịch trình khác phiếu', kind:KIND.VERIFY, claimed:r.total, cap:null, amount:0,
+        cause:`Địa điểm khai "${r.loc}" (${[...pc].join(', ')}) không thuộc nơi đến trên phiếu ${cv.map(f=>f.doc).join(', ')}: "${cv.map(f=>f.dest).join(' | ')}" (${[...pw].join(', ')}).`,
+        action:'Đối chiếu lịch trình thực tế với phiếu đã duyệt; nếu đi nơi khác phiếu thì yêu cầu bổ sung/điều chỉnh phiếu trước khi thanh toán.', basis:'Đối chiếu lịch trình với Work Travel (tỉnh/thành theo địa giới sau sáp nhập 2025)'});
+    const notDone = cv.filter(f=>f.status && !/completed|hoàn thành|approved|đã duyệt/i.test(f.status));
+    if (notDone.length) add(r,{item:'Trạng thái phiếu', kind:KIND.VERIFY, claimed:0, cap:null, amount:0,
+      cause:`Phiếu ${notDone.map(f=>f.doc+' ('+f.status+')').join(', ')} chưa ở trạng thái Completed.`, action:'Chờ phiếu được duyệt xong mới thanh toán.', basis:'Phiếu công tác phải được phê duyệt'});
+    if (r.req && !cv.some(f=>f.doc===r.req))
+      add(r,{item:'Số phiếu', kind:KIND.VERIFY, claimed:0, cap:null, amount:0,
+        cause:`Khai số phiếu ${r.req} nhưng phiếu bao phủ ngày này là ${cv.map(f=>f.doc).join(', ')}.`, action:'Điều chỉnh số phiếu tham chiếu trên bảng kê cho đúng.', basis:'Đối chiếu Travel requisition no.'});
+  }
+
+  // ---- 4. Nước ngoài
+  for (const r of rows){ r.foreign = isForeignLoc(r.loc); }
+
+  // ---- 5. Tiền ăn (theo người-ngày)
+  for (const list of Object.values(byED)){
+    const r0 = list[0];
+    if (list.some(x=>x._excludedDay)) continue; // đã loại toàn bộ
+    const tot = list.reduce((s,x)=>s+x.meal,0); if (tot<=0) continue;
+    const g = r0.grade;
+    if (list.some(x=>x.foreign)){
+      const fp = POLICY.foreign[g];
+      if (!fp){ add(r0,{item:'Ăn (nước ngoài)', kind:KIND.OUT, claimed:tot, cap:null, amount:0, cause:`Grade ${g} chưa có chính sách công tác nước ngoài.`, action:'Trình BOD/người phụ trách xác nhận mức chi.', basis:'Chính sách nước ngoài (A–I)'}); continue; }
+      const usd = tot<=1000 ? tot : (fx? tot/fx : null);
+      if (usd==null){ add(r0,{item:'Ăn (nước ngoài)', kind:KIND.VERIFY, claimed:tot, cap:fp[0]+' USD', amount:0, cause:'Chuyến nước ngoài, số tiền khai bằng VND nhưng chưa nhập tỷ giá.', action:'Nhập tỷ giá USD/VND trên App để kiểm tra lại.', basis:'Chính sách nước ngoài'}); continue; }
+      if (usd > fp[0]+1e-9) add(r0,{item:'Ăn (nước ngoài)', kind:KIND.OVER, claimed:tot, cap:fp[0]+' USD', amount: tot<=1000 ? tot-fp[0] : (usd-fp[0])*fx, unit: tot<=1000?'USD':'VND',
+        cause:`Ăn ${usd.toFixed(2)} USD/ngày > ${fp[0]} USD (Grade ${g}).`, action:'Thanh toán tối đa theo định mức USD; phần vượt nhân viên tự chịu.', basis:'Chính sách nước ngoài – Ăn/ngày'});
+      continue;
+    }
+    const cap = POLICY.meal[g];
+    // điều kiện giờ
+    let elig = {B:true,L:true,D:true}, timeNote = '', timeKnown = false;
+    const cv = covMap.get(r0);
+    if (cv && cv.length){
+      timeKnown = true; elig = {B:false,L:false,D:false};
+      for (const f of cv){
+        for (const m of ['B','L','D']){
+          const t = POLICY.mealTime[m];
+          let ok;
+          if (r0.day>f.fromDay && r0.day<f.toDay) ok = true;
+          else if (r0.day===f.fromDay && r0.day===f.toDay) ok = (f.dep!=null && f.dep < t.dep) && (f.arr!=null && f.arr > t.arr);
+          else if (r0.day===f.fromDay) ok = f.dep!=null && f.dep < t.dep;
+          else ok = f.arr!=null && f.arr > t.arr;
+          if (ok) elig[m] = true;
+        }
+      }
+      timeNote = cv.map(f=>`phiếu ${f.doc}: đi ${fmtDay(f.fromDay)} ${fmtMin(f.dep)} – về ${fmtDay(f.toDay)} ${fmtMin(f.arr)}`).join('; ');
+    }
+    const comp = {B:list.reduce((s,x)=>s+x.mB,0), L:list.reduce((s,x)=>s+x.mL,0), D:list.reduce((s,x)=>s+x.mD,0)};
+    const other = list.reduce((s,x)=>s+x.mN+x.mH+x.mF,0);
+    const split = (comp.B+comp.L+comp.D)>0 && other===0 && Math.abs(comp.B+comp.L+comp.D - tot)<=1;
+    // Chỉ đạo 12/11/2026: tổng tiền ăn ngày ≤ định mức ngày theo Grade → ĐẠT (không xét tách bữa/điều kiện giờ).
+    if (tot <= cap + 1) continue;
+    const MN = {B:'sáng',L:'trưa',D:'tối'};
+    const no = timeKnown ? ['B','L','D'].filter(m=>!elig[m]) : [];
+    const timeTxt = timeKnown ? (no.length ? ` Theo giờ trên phiếu, bữa ${no.map(m=>MN[m]).join(', ')} không đủ điều kiện (${timeNote}).` : ` Giờ trên phiếu đủ điều kiện cả 3 bữa (${timeNote}).`) : '';
+    add(r0,{item:'Tiền ăn/ngày', kind:KIND.OVER, claimed:tot, cap, amount:tot-cap,
+      cause:`Tổng tiền ăn ngày ${vnd(tot)} > định mức Grade ${g} ${vnd(cap)}/ngày${list.length>1?' (gộp '+list.length+' dòng)':''}.${timeTxt}`,
+      action:'Chỉ thanh toán tối đa định mức ngày; phần vượt nhân viên tự chịu.', basis:`Phụ cấp ăn Grade ${g}: ${vnd(cap)}/ngày (khai ≤ định mức là đạt)`});
+  }
+
+  // ---- 6. Khách sạn
+  const cgfNights = {};
+  for (const r of rows){
+    if (r.hotel<=0 || r._excludedDay) continue;
+    const g = r.grade, d = deptKey(r.dept), isCGF = d==='Swine Farm Development';
+    if (r.foreign){
+      const fp = POLICY.foreign[g];
+      if (!fp){ add(r,{item:'Khách sạn (nước ngoài)', kind:KIND.OUT, claimed:r.hotel, cap:null, amount:0, cause:`Grade ${g} chưa có chính sách nước ngoài.`, action:'Trình xác nhận mức chi.', basis:'Chính sách nước ngoài'}); continue; }
+      const usd = r.hotel<=5000 ? r.hotel : (fx? r.hotel/fx : null);
+      if (usd==null){ add(r,{item:'Khách sạn (nước ngoài)', kind:KIND.VERIFY, claimed:r.hotel, cap:fp[1]+' USD', amount:0, cause:'Chưa nhập tỷ giá USD/VND.', action:'Nhập tỷ giá trên App.', basis:'Chính sách nước ngoài'}); continue; }
+      if (usd>fp[1]) add(r,{item:'Khách sạn (nước ngoài)', kind:KIND.OVER, claimed:r.hotel, cap:fp[1]+' USD', amount: r.hotel<=5000? r.hotel-fp[1] : (usd-fp[1])*fx, unit:r.hotel<=5000?'USD':'VND',
+        cause:`Khách sạn ${usd.toFixed(2)} USD/đêm > ${fp[1]} USD.`, action:'Thanh toán theo định mức USD.', basis:'Chính sách nước ngoài – Khách sạn'});
+      continue;
+    }
+    if (isCGF && POLICY.cgfHotel[g]!=null){
+      const cap = POLICY.cgfHotel[g];
+      if (r.hotel>cap+1) add(r,{item:'Khách sạn (CGF – mức cố định)', kind:KIND.OVER, claimed:r.hotel, cap, amount:r.hotel-cap,
+        cause:`Phòng ban CGF/Swine Farm Development, Grade ${g}: mức cố định ${vnd(cap)}/đêm mọi khu vực.`, action:'Thanh toán theo mức cố định; phần vượt nhân viên tự chịu hoặc trình phê duyệt ngoại lệ.', basis:'Khách sạn CGF – mức cố định'});
+      if (POLICY.cgfNightLimit[g]){ const k = r.emp+'|'+monthKey(r.day); (cgfNights[k]=cgfNights[k]||[]).push(r); }
+    } else {
+      const hot = POLICY.hotel[g];
+      if (!hot || hot.ALL==='Actual'){ /* thực tế */ }
+      else {
+        const places = splitPlaces(r.loc); if (!places.length) places.push(r.loc||'');
+        const tiers = [...new Set(places.map(classifyPlace))];
+        const caps = tiers.map(t=>hot[t]!=null?hot[t]:hot.OTHER);
+        const lo = Math.min(...caps), hi2 = Math.max(...caps);
+        const tl = tiers.map(t=>TIER_LABEL[t]).join(' / ');
+        if (r.hotel>hi2+1) add(r,{item:'Khách sạn/đêm', kind:KIND.OVER, claimed:r.hotel, cap:hi2, amount:r.hotel-hi2,
+          cause:`Khách sạn ${vnd(r.hotel)} > định mức Grade ${g} khu vực ${tl} (${vnd(hi2)}).`, action:'Thanh toán theo định mức; phần vượt nhân viên tự chịu hoặc bổ sung phê duyệt ngoại lệ.', basis:`Khách sạn Grade ${g} – ${tl}`});
+        // Chỉ đạo 12/11/2026: tuyến nhiều khu vực, số tiền ≤ mức cao nhất áp dụng → ĐẠT.
+      }
+    }
+    // đối chiếu phiếu
+    const cv = covMap.get(r);
+    if (cv && cv.length){
+      if (r.wtMode==='full' && !cv.some(f=>/hotel|khách sạn/i.test(f.acc))) add(r,{item:'Khách sạn – hình thức lưu trú', kind:KIND.VERIFY, claimed:r.hotel, cap:null, amount:0,
+        cause:`Phiếu công tác đăng ký lưu trú "${cv.map(f=>f.acc).join(', ')}" nhưng có khai khách sạn.`, action:'Kiểm tra hóa đơn khách sạn; yêu cầu điều chỉnh phiếu nếu thực tế có ở khách sạn.', basis:'Đối chiếu phiếu Work Travel'});
+      const lastOnly = cv.every(f=>f.toDay===r.day && f.fromDay!==r.day);
+      if (lastOnly) add(r,{item:'Khách sạn – ngày về', kind:KIND.VERIFY, claimed:r.hotel, cap:null, amount:0,
+        cause:`Ngày ${fmtDay(r.day)} là ngày kết thúc phiếu (về ${cv.map(f=>fmtMin(f.arr)).join(', ')}) nhưng vẫn khai khách sạn.`, action:'Kiểm tra ngày nhận/trả phòng trên hóa đơn; không lưu trú đêm này thì loại.', basis:'Khách sạn tính theo đêm lưu trú trong thời gian công tác'});
+    }
+  }
+  for (const list of Object.values(cgfNights)){
+    const r0 = list[0], lim = POLICY.cgfNightLimit[r0.grade];
+    if (list.length>lim){ const extra = list.slice().sort((a,b)=>a.day-b.day).slice(lim);
+      add(extra[0],{item:`Số đêm KS CGF tháng ${monthKey(r0.day)}`, kind:KIND.OVER, claimed:list.length+' đêm', cap:lim+' đêm', amount:extra.reduce((s,x)=>s+Math.min(x.hotel,POLICY.cgfHotel[r0.grade]),0),
+        cause:`${list.length} đêm khách sạn trong tháng, vượt giới hạn ${lim} đêm (Grade ${r0.grade}, CGF). Đêm vượt: ${extra.map(x=>fmtDay(x.day)).join(', ')}.`,
+        action:'Loại tiền khách sạn các đêm vượt giới hạn, trừ khi có phê duyệt ngoại lệ.', basis:'CGF Grade C, D tối đa 6 đêm/tháng'}); }
+    else if (list.length===lim) add(list[0],{item:`Số đêm KS CGF tháng ${monthKey(r0.day)}`, kind:KIND.VERIFY, claimed:list.length+' đêm', cap:lim+' đêm', amount:0,
+      cause:`Đã dùng đủ ${lim} đêm khách sạn/tháng (chạm giới hạn).`, action:'Lưu ý khi duyệt các bộ chứng từ khác cùng tháng.', basis:'CGF Grade C, D tối đa 6 đêm/tháng'});
+  }
+
+  // ---- 7. Nhà trọ (Room rental)
+  const roomByM = {};
+  for (const r of rows){ if (r.room<=0 || r._excludedDay) continue;
+    const sup = POLICY.roomSupport.find(s=>s.code===r.emp || norm(r.name)===s.name);
+    if (sup){ const k = r.emp+'|'+monthKey(r.day); (roomByM[k]=roomByM[k]||{sup,list:[]}).list.push(r); }
+    else add(r,{item:'Nhà trọ (Room rental)', kind:KIND.OUT, claimed:r.room, cap:null, amount:0,
+      cause:'Chính sách chưa có định mức nhà trọ; nhân viên này không thuộc danh sách hỗ trợ nhà trọ đã xác nhận.', action:'Xin xác nhận của người phụ trách; nếu không được duyệt thì loại khoản này.', basis:'Chính sách CTP – mục chưa có định mức'});
+  }
+  for (const {sup,list} of Object.values(roomByM)){
+    const s = list.reduce((a,x)=>a+x.room,0), r0 = list[0];
+    if (s>sup.monthly) add(r0,{item:'Nhà trọ – hỗ trợ tháng', kind:KIND.OVER, claimed:s, cap:sup.monthly, amount:s-sup.monthly,
+      cause:`Tổng nhà trọ tháng ${monthKey(r0.day)} ${vnd(s)} > mức hỗ trợ đã xác nhận ${vnd(sup.monthly)}/tháng.`, action:'Thanh toán tối đa mức hỗ trợ tháng.', basis:'Hỗ trợ nhà trọ đã xác nhận 28/10/2026'});
+    else add(r0,{item:'Nhà trọ – hỗ trợ tháng', kind:KIND.OK, claimed:s, cap:sup.monthly, amount:0,
+      cause:`Khoản hỗ trợ nhà trọ đã được xác nhận (${vnd(sup.monthly)}/tháng), cộng ngoài định mức Grade.`, action:'Đối chiếu hợp đồng/biên nhận nhà trọ.', basis:'Hỗ trợ nhà trọ đã xác nhận 28/10/2026'});
+  }
+
+  // ---- 8. Đi lại (Transportation) theo người-ngày
+  for (const list of Object.values(byED)){
+    if (list.some(x=>x._excludedDay)) continue;
+    const r0 = list[0], t = list.reduce((s,x)=>s+x.trans,0); if (t<=0) continue;
+    const g = r0.grade, cap = POLICY.travel[g];
+    if (cap==null){ add(r0,{item:'Đi lại (Transportation)', kind:KIND.OUT, claimed:t, cap:null, amount:0,
+      cause:`Grade ${g} không có định mức phụ cấp đi lại (chỉ Grade C–F).`, action:'Xin xác nhận của người phụ trách; không được duyệt thì loại.', basis:'Đi lại Grade C–F'}); continue; }
+    const km = Math.max(...list.map(x=>x.km));
+    const allow = km>=POLICY.travelKm.minKm ? Math.max(cap, km*POLICY.travelKm.rate) : cap;
+    if (t>allow+1) add(r0,{item:'Đi lại/ngày', kind:KIND.OVER, claimed:t, cap:allow, amount:t-allow,
+      cause:`Đi lại ${vnd(t)} > mức tối đa ${vnd(allow)} (120.000 đ/ngày${km>=20?'; hoặc '+km+' km × 2.000 đ':''}).`, action:'Thanh toán theo mức tối đa; phần vượt cần chứng từ và phê duyệt.', basis:'Đi lại Grade C–F: 120.000 đ/ngày; ≥20 km: 2.000 đ/km'});
+  }
+
+  // ---- 9. VAT Transportation
+  for (const r of rows){ if (r.vTrans<=0 || r._excludedDay) continue;
+    add(r,{item:'VAT Transportation (vé xe)', kind:KIND.OK, claimed:r.vTrans, cap:'Theo vé', amount:0,
+      cause:'Khoản vé xe kê khai được thanh toán thêm ngoài định mức đi lại.', action:'Đối chiếu số tiền với vé xe/hóa đơn đính kèm; thiếu chứng từ thì loại.', basis:'Hỗ trợ VAT Transportation đã xác nhận 28/10/2026'}); }
+
+  // ---- 10. Tiếp khách
+  const entSeries = {};
+  for (const r of rows){ if (r.ent>0){ (entSeries[r.emp]=entSeries[r.emp]||[]).push(r); } }
+  for (const r of rows){ if (r.ent<=0 || r._excludedDay) continue;
+    const d = deptKey(r.dept), e = POLICY.ent.find(x=>x[0]===r.grade && x[1]===d);
+    const same = (entSeries[r.emp]||[]).filter(x=>x.ent===r.ent).length;
+    const suspect = same>=3 ? ` Cùng số tiền ${vnd(r.ent)} lặp ${same} ngày – nghi khai nhầm cột (vd. tiền khách sạn).` : '';
+    if (!e) add(r,{item:'Tiếp khách (VAT Entertainment)', kind:KIND.OUT, claimed:r.ent, cap:null, amount:0,
+      cause:`Grade ${r.grade} / phòng ban "${r.dept}" không có định mức tiếp khách.${suspect}`, action: suspect ? 'Kiểm tra hóa đơn: nếu là khách sạn thì chuyển sang cột VAT Hotel và kiểm lại định mức khách sạn; nếu là tiếp khách thì trình phê duyệt.' : 'Yêu cầu giải trình, hóa đơn và phê duyệt của cấp có thẩm quyền; không được duyệt thì loại.', basis:'Tiếp khách theo Grade + phòng ban'});
+    else if (e[2]!=='Actual' && r.ent>e[2]+1) add(r,{item:'Tiếp khách/chứng từ', kind:KIND.OVER, claimed:r.ent, cap:e[2], amount:r.ent-e[2],
+      cause:`Tiếp khách ${vnd(r.ent)} > định mức ${vnd(e[2])}/chứng từ (Grade ${r.grade}, ${e[1]}).${suspect}`, action:'Thanh toán theo định mức; phần vượt cần phê duyệt ngoại lệ.', basis:`Tiếp khách Grade ${r.grade} – ${e[1]}`});
+    else if (suspect) add(r,{item:'Tiếp khách – lặp số tiền', kind:KIND.VERIFY, claimed:r.ent, cap:e[2], amount:0, cause:suspect.trim(), action:'Kiểm tra hóa đơn tiếp khách.', basis:'Kiểm soát bất thường'});
+  }
+
+  // ---- 11. Incidental / VAT Others
+  for (const r of rows){ if (r._excludedDay) continue;
+    if (r.incid>0){
+      if (r.foreign){ const fp = POLICY.foreign[r.grade];
+        if (!fp) add(r,{item:'International surcharge', kind:KIND.OUT, claimed:r.incid, cap:null, amount:0, cause:`Grade ${r.grade} chưa có chính sách nước ngoài.`, action:'Trình xác nhận.', basis:'Chính sách nước ngoài'});
+        else { const usd = r.incid<=1000? r.incid : (fx? r.incid/fx : null);
+          if (usd==null) add(r,{item:'International surcharge', kind:KIND.VERIFY, claimed:r.incid, cap:fp[2]+' USD', amount:0, cause:'Chưa nhập tỷ giá.', action:'Nhập tỷ giá trên App.', basis:'Chính sách nước ngoài'});
+          else if (usd>fp[2]) add(r,{item:'International surcharge', kind:KIND.OVER, claimed:r.incid, cap:fp[2]+' USD', amount:r.incid<=1000? r.incid-fp[2] : (usd-fp[2])*fx, unit:r.incid<=1000?'USD':'VND', cause:`${usd.toFixed(2)} USD/ngày > ${fp[2]} USD.`, action:'Thanh toán theo định mức.', basis:'International surcharge (≈ cột Incidental)'}); }
+      } else add(r,{item:'Incidental (trong nước)', kind:KIND.OUT, claimed:r.incid, cap:null, amount:0, cause:'Chính sách trong nước không có khoản Incidental.', action:'Yêu cầu giải trình nội dung chi; không thuộc chính sách thì loại.', basis:'Chính sách CTP'});
+    }
+    if (r.vOther>0) add(r,{item:'VAT Others', kind:KIND.OUT, claimed:r.vOther, cap:null, amount:0, cause:'Khoản khác không có trong danh mục định mức.', action:'Yêu cầu hóa đơn và giải trình; trình phê duyệt.', basis:'Chính sách CTP'});
+  }
+  // nước ngoài: thông tin
+  const foreignRows = rows.filter(r=>r.foreign);
+  if (foreignRows.length) warnings.push(`Phát hiện ${foreignRows.length} dòng có địa danh nước ngoài (${[...new Set(foreignRows.map(r=>r.name))].join(', ')}). Số tiền ≤ 1.000 được hiểu là USD; số lớn hơn cần tỷ giá.`);
+  if (excluded.length) warnings.push(`${excluded.length} dòng bị loại khỏi kiểm tra vì Grade lỗi/không xác định hoặc thiếu ngày.`);
+
+  // ---- kết quả theo ngày × loại chi phí
+  const KRANK = [KIND.OVER, KIND.ARITH, KIND.NOBASIS, KIND.VERIFY, KIND.OUT, KIND.OK];
+  function hotelCap(r){
+    const g = r.grade, d = deptKey(r.dept);
+    if (r.foreign){ const fp = POLICY.foreign[g]; return fp ? fp[1]+' USD' : 'Không có ĐM'; }
+    if (d==='Swine Farm Development' && POLICY.cgfHotel[g]!=null) return POLICY.cgfHotel[g];
+    const hot = POLICY.hotel[g]; if (!hot || hot.ALL==='Actual') return 'Thực tế';
+    const places = splitPlaces(r.loc); if (!places.length) places.push(r.loc||'');
+    return Math.max(...[...new Set(places.map(classifyPlace))].map(t=>hot[t]!=null?hot[t]:hot.OTHER));
+  }
+  const dayFindings = {};
+  for (const f of F){ const k = f.emp+'|'+f.day; (dayFindings[k]=dayFindings[k]||[]).push(f); }
+  const dayViews = {};
+  for (const [k, list] of Object.entries(byED)){
+    const r0 = list[0], g = r0.grade, sum = key => list.reduce((s,x)=>s+x[key],0);
+    const fs = dayFindings[k] || [];
+    const foreign = list.some(x=>x.foreign), fp = POLICY.foreign[g];
+    const hr = list.find(x=>x.hotel>0) || r0, er = list.find(x=>x.ent>0) || r0;
+    const km = Math.max(...list.map(x=>x.km));
+    const entE = POLICY.ent.find(x=>x[0]===g && x[1]===deptKey(r0.dept));
+    const sup = POLICY.roomSupport.find(s=>s.code===r0.emp || norm(r0.name)===s.name);
+    const cats = {
+      meal:  {amt:sum('meal'),  cap: foreign ? (fp? fp[0]+' USD':'Không có ĐM') : POLICY.meal[g]},
+      hotel: {amt:sum('hotel'), cap: hotelCap(hr)},
+      trans: {amt:sum('trans'), cap: POLICY.travel[g]!=null ? (km>=POLICY.travelKm.minKm ? Math.max(POLICY.travel[g], km*POLICY.travelKm.rate) : POLICY.travel[g]) : 'Không có ĐM'},
+      room:  {amt:sum('room'),  cap: sup ? sup.monthly : 'Không có ĐM', per: sup ? '/tháng' : ''},
+      vTrans:{amt:sum('vTrans'),cap: 'Theo vé'},
+      ent:   {amt:sum('ent'),   cap: entE ? (entE[2]==='Actual'?'Thực tế':entE[2]) : 'Không có ĐM'},
+      other: {amt:sum('incid')+sum('vOther'), cap: (foreign && fp && sum('vOther')===0) ? fp[2]+' USD' : 'Không có ĐM'}
+    };
+    const dayLevel = [];
+    for (const f of fs){
+      const c = Object.keys(CAT_TEST).find(c=>CAT_TEST[c](f.item));
+      if (c){ const o = cats[c]; o.fs = (o.fs||[]).concat(f); }
+      else dayLevel.push(f);
+    }
+    for (const c of Object.keys(cats)){
+      const o = cats[c];
+      if (o.fs) { o.kind = o.fs.map(f=>f.kind).sort((a,b)=>KRANK.indexOf(a)-KRANK.indexOf(b))[0]; o.over = o.fs.filter(f=>f.kind!==KIND.OK && f.unit!=='USD').reduce((s,f)=>s+(f.amount||0),0); o.reason = o.fs.map(f=>f.cause).join(' '); }
+      else if (o.amt>0) o.kind = 'Đạt';
+      if (o.kind && dayLevel.some(f=>[KIND.NOBASIS,KIND.ARITH].includes(f.kind)) && o.kind==='Đạt') o.kind = dayLevel.find(f=>[KIND.NOBASIS,KIND.ARITH].includes(f.kind)).kind;
+    }
+    const cv = covMap.get(r0) || [];
+    dayViews[k] = {day:r0.day, emp:r0.emp, att:[...new Set(list.map(x=>x.att).filter(Boolean))].join(', '), docs:[...new Set(list.map(x=>x.doc))].join(', '),
+      req:[...new Set(list.map(x=>x.req).filter(Boolean))].join(', '), loc:[...new Set(list.map(x=>x.loc).filter(Boolean))].join(' | '),
+      wt: cv.map(f=>({doc:f.doc, from:f.fromRaw, to:f.toRaw, dest:f.dest, acc:f.acc})),
+      cats, dayLevel, notes:[...new Set(list.flatMap(x=>x.notes||[]))], hasAmt: list.some(x=>x.total>0) || fs.length>0};
+  }
+
+  // ---- tổng hợp theo nhân viên
+  const emps = {};
+  for (const r of rows){
+    const e = emps[r.emp] = emps[r.emp] || {emp:r.emp, name:r.name, grade:r.grade, dept:r.dept, gradeSrc:r.gradeSrc, unit:r.unit, docs:new Set(), days:new Set(), rows:[], findings:[],
+      sum:{meal:0,hotel:0,room:0,trans:0,vTrans:0,ent:0,incid:0,vOther:0,total:0}};
+    e.docs.add(r.doc); if (r.total>0) e.days.add(r.day); e.rows.push(r);
+    for (const k of Object.keys(e.sum)) e.sum[k]+=r[k];
+  }
+  for (const f of F){ if (emps[f.emp]) emps[f.emp].findings.push(f); }
+  const money = f => f.unit==='USD' ? 0 : (f.amount||0);
+  const list = Object.values(emps).map(e=>{
+    e.docs=[...e.docs]; e.nDays=e.days.size; delete e.days;
+    // tổng theo ngày, không cộng trùng: phần loại ≤ tổng ngày; phần xác minh ≤ phần còn lại
+    const dayTot = {}, dayRej = {}, dayVer = {}, dayOut = {};
+    for (const r of e.rows) dayTot[r.day] = (dayTot[r.day]||0) + r.total;
+    for (const f of e.findings){
+      const a = money(f);
+      if ([KIND.OVER,KIND.NOBASIS,KIND.ARITH].includes(f.kind)) dayRej[f.day] = (dayRej[f.day]||0)+a;
+      else if (f.kind===KIND.VERIFY) dayVer[f.day] = (dayVer[f.day]||0)+a;
+      else if (f.kind===KIND.OUT && typeof f.claimed==='number') dayOut[f.day] = (dayOut[f.day]||0)+f.claimed;
+    }
+    e.reject = 0; e.verify = 0; e.outAmt = 0;
+    for (const d of Object.keys(dayTot)){
+      const R = Math.min(dayTot[d], dayRej[d]||0); const V = Math.min(dayTot[d]-R, dayVer[d]||0); const O = Math.min(dayTot[d]-R-V, dayOut[d]||0);
+      e.reject += R; e.verify += V; e.outAmt += O;
+    }
+    e.over = e.findings.filter(f=>f.kind===KIND.OVER||f.kind===KIND.ARITH).reduce((s,f)=>s+money(f),0);
+    e.nobasis = e.findings.filter(f=>f.kind===KIND.NOBASIS).reduce((s,f)=>s+money(f),0);
+    e.payable = Math.max(0, e.sum.total - e.reject - e.verify - e.outAmt);
+    const bad = e.findings.some(f=>[KIND.OVER,KIND.NOBASIS,KIND.ARITH].includes(f.kind));
+    const warn = e.findings.some(f=>[KIND.VERIFY,KIND.OUT].includes(f.kind));
+    e.status = bad ? 'Sai lệch' : warn ? 'Cần xác minh' : 'Đạt';
+    e.wt = (wtByEmp[e.emp]||[]).slice().sort((a,b)=>a.fromDay-b.fromDay);
+    e.hasWT = e.wt.length>0;
+    e.wtMode = WT_FULL.includes(e.grade) ? 'full' : 'time';
+    e.gradeOld = e.rows[0].gradeOld || '';
+    e.dayList = Object.values(dayViews).filter(d=>d.emp===e.emp && d.hasAmt).sort((a,b)=>a.day-b.day);
+    e.notes = [...new Set(e.rows.flatMap(r=>r.notes||[]))];
+    e.wtDays = e.rows.filter(r=>r.total>0 && r.wtDocs).length;
+    e.findings.sort((a,b)=>a.day-b.day);
+    return e;
+  }).sort((a,b)=> (b.reject-a.reject) || (b.verify-a.verify) || a.name.localeCompare(b.name,'vi'));
+  const days = rows.map(r=>r.day);
+  return { employees:list, findings:F, excluded, warnings, KIND,
+    stats:{rows:rows.length, excluded:excluded.length, emps:list.length, wt:wtCount, from:Math.min(...days), to:Math.max(...days),
+      total:rows.reduce((s,r)=>s+r.total,0), reject:list.reduce((s,e)=>s+e.reject,0), verify:list.reduce((s,e)=>s+e.verify,0),
+      withWT:list.filter(e=>e.hasWT).length, noWT:list.filter(e=>!e.hasWT).length,
+      bad:list.filter(e=>e.status==='Sai lệch').length, warn:list.filter(e=>e.status==='Cần xác minh').length, ok:list.filter(e=>e.status==='Đạt').length} };
+}
+if (typeof module!=='undefined') module.exports = {runCheck, POLICY, fmtDay, vnd, classifyPlace, norm, num, CAT_NAME};
+
+</script>
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const KC = {'Vượt định mức':'over','Thiếu căn cứ':'nobasis','Cần xác minh':'verify','Ngoài danh mục':'out','Sai số học':'arith','Hỗ trợ đã duyệt':'ok'};
+const KORDER = ['Vượt định mức','Sai số học','Thiếu căn cứ','Cần xác minh','Ngoài danh mục','Hỗ trợ đã duyệt'];
+const STC = {'Sai lệch':'bad','Cần xác minh':'warn','Đạt':'ok'};
+const h = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = v => typeof v==='number' ? vnd(v) : (v==null||v===''?'—':h(v));
+let state = {book:null, res:null, sel:null, filter:'all', q:'', sort:'reject', sample:false, fileName:''};
+
+/* ---------- dữ liệu ví dụ (không phải số liệu thật) ---------- */
+function sampleBook(){
+  const H2 = ['Document No','Document Status','Create Date','Attendance Type','Empl. Code',"Claimer's Name",'Unit, Dept','Date','Travel requisition no.','Location','Deviant Time Start','Deviant Time End','Km','Transportation','Room rental accomodation','Meal Breakfast','Meal Lunch','Meal Dinner','Meal Night','Meal Half Day','Meal Full Day','Total Meal','Incidental','VAT Transportation','VAT Entertainment','VAT Hotel accomodation','VAT Others','Total Cost','Phòng ban','Grade'];
+  const d = (dd,mm)=> Math.round((Date.UTC(2026,mm-1,dd)-Date.UTC(1899,11,30))/864e5);
+  const row = (doc,att,emp,name,day,req,loc,tr,room,b,l,dn,half,ent,hotel,dept,g)=>{ const meal=b+l+dn+half; return [doc,'Insigning',null,att,emp,name,'VÍ DỤ',day,req,loc,null,null,0,tr,room,b,l,dn,0,half,0,meal,0,0,ent,hotel,0,tr+room+meal+ent+hotel,dept,g]; };
+  const input = [[null],H2,
+    row('900001','BT02','90000001','NV Ví dụ 01',d(5,10),'800001','Trại PS Yên Nội, Phú Thọ',120000,0,30000,60000,60000,0,0,450000,'Farm Production','D'),
+    row('900001','BT02','90000001','NV Ví dụ 01',d(6,10),'800001','Trại PS Yên Nội, Phú Thọ',120000,0,30000,60000,60000,0,0,400000,'Farm Production','D'),
+    row('900001','BT02','90000001','NV Ví dụ 01',d(7,10),'800001','Trại PS Yên Nội, Phú Thọ - Hà Nội',120000,0,30000,60000,60000,0,0,400000,'Farm Production','D'),
+    row('900002','DM27','90000002','NV Ví dụ 02',d(12,10),'800002','Bắc Ninh',120000,0,36000,72000,72000,0,4500000,650000,'Swine Sale','E'),
+    row('900002','DM27','90000002','NV Ví dụ 02',d(13,10),'800002','Bắc Ninh - Phú Thọ',120000,0,36000,72000,72000,30000,0,690000,'Swine Sale','E'),
+    row('900003','DM27','90000003','NV Ví dụ 03',d(20,10),'','Thanh Hóa',0,0,50000,100000,100000,0,0,1200000,'Farm Production','G'),
+    row('900003','AL01','90000003','NV Ví dụ 03',d(21,10),'','Nghỉ phép',0,0,0,0,0,150000,0,0,'Farm Production','G'),
+    row('900004','DM26','90000004','NV Ví dụ 04',d(14,10),'800004','CGF Trại ví dụ, Hưng Yên',120000,0,0,72000,72000,0,0,400000,'CGF','E'),
+    row('900004','DM26','90000004','NV Ví dụ 04',d(15,10),'800004','CGF Trại ví dụ, Hưng Yên',120000,0,36000,72000,72000,0,0,400000,'CGF','E')
+  ];
+  const wt = [['Document No','Document Type','Status','Created At','Full Name','SAPID','Department','From Date','To Date','Mode of Transportation','Accommodation','Accompanied Person','Purpose','Destination'],
+    ['800001','Work Travel Form','Completed','01/10/2026 08:00','NV Ví dụ 01','90000001','VÍ DỤ','05/10/2026 08:00','07/10/2026 18:00','Company car/Ô tô công ty','Hotel/Khách sạn','','Kiểm tra trại','Trại PS Yên Nội'],
+    ['800002','Work Travel Form','Completed','10/10/2026 08:00','NV Ví dụ 02','90000002','VÍ DỤ','12/10/2026 05:30','13/10/2026 21:00','Own car/Ô tô riêng','Hotel/Khách sạn','','Gặp khách hàng','Bắc Ninh'],
+    ['800009','Work Travel Form','Completed','01/10/2026 08:00','NV Ví dụ 03','90000003','VÍ DỤ','01/10/2026 07:00','02/10/2026 18:00','Own car/Ô tô riêng','Hotel/Khách sạn','','Họp','Thanh Hóa'],
+    ['800004','Work Travel Form','Completed','12/10/2026 08:00','NV Ví dụ 04','90000004','VÍ DỤ','14/10/2026 09:00','16/10/2026 17:00','Own motorcycle/Xe máy riêng','Other/Khác','','Giám sát CGF','Hưng Yên']];
+  const master = [[null],[null],['Pers. Number/Mã số NV','Name/Họ tên','Grade','Area','Dept.'],
+    ['90000001','NV Ví dụ 01','D','North','Farm Production'],['90000002','NV Ví dụ 02','E','North','Swine Sale'],['90000003','NV Ví dụ 03','G','North','Farm Production'],['90000004','NV Ví dụ 04','E','North','CGF']];
+  return {input, wt, master};
+}
+
+/* ---------- đọc file ---------- */
+function pickSheet(wb, tests){
+  const names = wb.SheetNames;
+  for (const t of tests){ const n = names.find(x=>t(norm(x))); if (n) return n; }
+  return null;
+}
+function toAoa(wb, name){ if (!name) return null; return XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, raw:true, defval:null, blankrows:true}); }
+function readFile(file){
+  if (typeof XLSX==='undefined'){ showErr('Chưa tải được thư viện đọc Excel (cần kết nối mạng). Vui lòng tải lại trang.'); return; }
+  const fr = new FileReader();
+  fr.onload = e => {
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const nIn = pickSheet(wb, [n=>n==='input_ctp', n=>n.includes('input')]);
+      const nWt = pickSheet(wb, [n=>n.includes('work travel')]);
+      const nMs = pickSheet(wb, [n=>n.includes('master nhanvien'), n=>n.includes('master nv'), n=>n.includes('nhanvien')]);
+      if (!nIn) throw new Error('Không tìm thấy sheet Input_CTP. Các sheet trong file: '+wb.SheetNames.join(', '));
+      const book = {input:toAoa(wb,nIn), wt:toAoa(wb,nWt), master:toAoa(wb,nMs)};
+      const cnt = a => a ? a.filter(r=>r && r[0]!=null && r[0]!=='').length : 0;
+      state.pending = book; state.fileName = file.name;
+      $('#msg').innerHTML = '';
+      const fi = $('#fileInfo'); fi.className = 'note ready';
+      fi.textContent = `Đã nạp “${file.name}”: Input_CTP ~${Math.max(0,cnt(book.input)-2).toLocaleString('vi-VN')} dòng · Work Travel ${nWt?'~'+Math.max(0,cnt(book.wt)-1).toLocaleString('vi-VN')+' phiếu':'không có sheet'} · MASTER NHANVIEN ${nMs?'có':'không có'}. Bấm “Kiểm tra”.`;
+      $('#btnRun').disabled = false; $('#btnRun').focus();
+    } catch(err){ showErr(err.message||String(err)); }
+  };
+  fr.onerror = () => showErr('Không đọc được file. Kiểm tra file có đang mở bằng mật khẩu không.');
+  fr.readAsArrayBuffer(file);
+}
+function showErr(t){ $('#msg').innerHTML = `<div class="banner err" role="alert"><b>Không kiểm tra được:</b> ${h(t)}</div>`; }
+
+/* ---------- chạy kiểm tra ---------- */
+function run(){
+  try{
+    state.res = runCheck(state.book, {fx: num($('#fx').value)});
+  } catch(err){ showErr(err.message||String(err)); return; }
+  $('#btnExport').disabled = false;
+  const r = state.res;
+  $('#msg').innerHTML = state.sample
+    ? `<div class="banner sample"><b>Đang hiển thị dữ liệu ví dụ</b> (4 nhân viên giả định, không phải số liệu thật). Chọn file Excel của Anh rồi bấm “Kiểm tra”.</div>`
+    : `<div class="banner sample" style="background:var(--accent-soft)"><span>Đã kiểm tra <b>${h(state.fileName)}</b> · kỳ dữ liệu <span class="num">${fmtDay(r.stats.from)} – ${fmtDay(r.stats.to)}</span> · ${r.stats.rows.toLocaleString('vi-VN')} dòng · ${r.stats.wt} phiếu công tác · ${r.stats.withWT} NV có phiếu được đối chiếu lịch trình, ${r.stats.noWT} NV không có phiếu (bỏ qua đối chiếu phiếu).</span></div>`;
+  renderStrip(); renderWarns(); renderChips(); renderList();
+  if (!state.sel || !r.employees.find(e=>e.emp===state.sel)) state.sel = (visible()[0]||{}).emp;
+  renderDetail();
+}
+
+function renderStrip(){
+  const s = state.res.stats;
+  const pay = state.res.employees.reduce((a,e)=>a+e.payable,0);
+  $('#strip').innerHTML = [
+    ['Nhân viên', s.emps.toLocaleString('vi-VN'), `${s.bad} sai lệch · ${s.warn} cần xác minh · ${s.ok} đạt`, ''],
+    ['Đối chiếu Work Travel', `${s.withWT}/${s.emps}`, `${s.withWT} NV có phiếu · ${s.noWT} NV không có (bỏ qua)`, ''],
+    ['Tổng đề nghị', vnd(s.total), `${s.rows.toLocaleString('vi-VN')} dòng hợp lệ${s.excluded?' · '+s.excluded+' dòng bị loại':''}`, ''],
+    ['Đề xuất loại', vnd(s.reject), 'Vượt định mức, thiếu căn cứ, sai số học', 'crit'],
+    ['Chờ xác minh', vnd(s.verify), 'Cần bổ sung chứng từ/xác nhận', 'amber'],
+    ['Đề xuất thanh toán ngay', vnd(pay), 'Phần không có ngoại lệ', 'ok']
+  ].map(([l,v,sub,c])=>`<div class="kpi ${c}"><span class="eyebrow">${l}</span><span class="v">${v}</span><span class="s">${sub}</span></div>`).join('');
+}
+function renderWarns(){
+  const w = state.res.warnings;
+  $('#warns').innerHTML = w.length ? `<div class="banner sample"><div><b>Lưu ý dữ liệu</b><ul class="warnlist">${w.map(x=>`<li>${h(x)}</li>`).join('')}</ul></div></div>` : '';
+}
+function renderChips(){
+  const s = state.res.stats;
+  const opts = [['all','Tất cả',s.emps],['Sai lệch','Sai lệch',s.bad],['Cần xác minh','Cần xác minh',s.warn],['Đạt','Đạt',s.ok]];
+  $('#chips').innerHTML = opts.map(([v,l,n])=>`<button type="button" class="chip" data-f="${v}" aria-pressed="${state.filter===v}">${l} <span class="num">${n}</span></button>`).join('');
+}
+function visible(){
+  const q = norm(state.q);
+  let L = state.res.employees.filter(e => (state.filter==='all'||e.status===state.filter) && (!q || norm(e.name).includes(q) || e.emp.includes(q)));
+  const S = state.sort;
+  L = L.slice().sort((a,b)=> S==='name' ? a.name.localeCompare(b.name,'vi') : S==='total' ? b.sum.total-a.sum.total : S==='verify' ? b.verify-a.verify : (b.reject-a.reject)||(b.verify-a.verify));
+  return L;
+}
+function renderList(){
+  const L = visible();
+  $('#cnt').textContent = `${L.length}/${state.res.employees.length}`;
+  $('#list').innerHTML = L.length ? L.map(e=>`
+    <li class="emp" role="option" tabindex="0" data-emp="${h(e.emp)}" aria-selected="${e.emp===state.sel}">
+      <span class="stripe s-${STC[e.status]}"></span>
+      <span style="min-width:0"><span class="nm" style="display:block">${h(e.name)}</span><span class="meta">${h(e.emp)} · Grade ${h(e.grade)} · ${h(e.dept)}</span></span>
+      <span class="amt">${e.reject?`<span class="num" style="color:var(--crit)">−${vnd(e.reject)}</span>`:''}${e.verify?`<span class="num" style="color:var(--amber)">?${vnd(e.verify)}</span>`:''}${!e.reject&&!e.verify?`<span class="pill st-${STC[e.status]}">${e.status}</span>`:''}</span>
+    </li>`).join('') : `<li class="empty">Không có nhân viên phù hợp bộ lọc.</li>`;
+}
+
+/* ---------- gộp ngoại lệ lặp lại ---------- */
+function groupFindings(fs){
+  const G = new Map();
+  for (const f of fs){
+    const key = f.kind+'|'+f.item+'|'+String(f.cause).replace(/\d[\d.,:\/]*/g,'#')+'|'+f.action;
+    let g = G.get(key);
+    if (!g){ g = {kind:f.kind, item:f.item, cause:f.cause, action:f.action, basis:f.basis, cap:f.cap, unit:f.unit, days:[], docs:new Set(), claimed:0, claimedTxt:null, amount:0, n:0}; G.set(key,g); }
+    g.n++; g.days.push(f.day); g.docs.add(f.doc);
+    if (typeof f.claimed==='number') g.claimed += f.claimed; else g.claimedTxt = f.claimed;
+    g.amount += f.amount||0;
+    if (g.cap!==f.cap) g.capVaries = true;
+  }
+  const out = [...G.values()];
+  for (const g of out){ if (g.n>1) g.cause = g.cause.replace(/ngày \d{2}\/\d{2}\/\d{4}/g,'các ngày nêu trên'); }
+  out.sort((a,b)=> KORDER.indexOf(a.kind)-KORDER.indexOf(b.kind) || b.amount-a.amount);
+  return out;
+}
+function dayList(days){
+  const ds = [...new Set(days)].sort((a,b)=>a-b);
+  const parts = []; let i=0;
+  while (i<ds.length){ let j=i; while (j+1<ds.length && ds[j+1]===ds[j]+1) j++; parts.push(j>i ? fmtDay(ds[i]).slice(0,5)+'–'+fmtDay(ds[j]).slice(0,5) : fmtDay(ds[i]).slice(0,5)); i=j+1; }
+  return parts.join(', ')+'/'+fmtDay(ds[ds.length-1]).slice(6);
+}
+
+/* ---------- bảng khoản mục ---------- */
+const CATS = [
+  ['Tiền ăn', e=>e.sum.meal, it=>/Tiền ăn|^Ăn|Total Meal/.test(it)],
+  ['Khách sạn', e=>e.sum.hotel, it=>/Khách sạn|đêm KS/.test(it)],
+  ['Nhà trọ (Room rental)', e=>e.sum.room, it=>/Nhà trọ/.test(it)],
+  ['Đi lại (Transportation)', e=>e.sum.trans, it=>/Đi lại/.test(it)],
+  ['Vé xe (VAT Transportation)', e=>e.sum.vTrans, it=>/VAT Transportation/.test(it)],
+  ['Tiếp khách (VAT Entertainment)', e=>e.sum.ent, it=>/Tiếp khách/.test(it)],
+  ['Incidental / VAT Others', e=>e.sum.incid+e.sum.vOther, it=>/Incidental|International|VAT Others/.test(it)],
+];
+function catTable(e){
+  const rows = CATS.map(([n,get,test])=>{
+    const fs = e.findings.filter(f=>test(f.item));
+    const rej = fs.filter(f=>['Vượt định mức','Thiếu căn cứ','Sai số học'].includes(f.kind)).reduce((s,f)=>s+(f.unit==='USD'?0:f.amount||0),0);
+    const ver = fs.filter(f=>f.kind==='Cần xác minh').reduce((s,f)=>s+(f.amount||0),0);
+    const out = fs.filter(f=>f.kind==='Ngoài danh mục').reduce((s,f)=>s+(typeof f.claimed==='number'?f.claimed:0),0);
+    const kinds = [...new Set(fs.map(f=>f.kind))].sort((a,b)=>KORDER.indexOf(a)-KORDER.indexOf(b));
+    return {n, claim:get(e), rej, ver, out, kinds};
+  }).filter(r=>r.claim>0 || r.kinds.length);
+  const day = e.findings.filter(f=>!CATS.some(c=>c[2](f.item)) && f.item!=='Grade' && f.item!=='Số phiếu');
+  const dRej = day.filter(f=>['Thiếu căn cứ','Sai số học','Vượt định mức'].includes(f.kind)).reduce((s,f)=>s+(f.amount||0),0);
+  const dVer = day.filter(f=>f.kind==='Cần xác minh').reduce((s,f)=>s+(f.amount||0),0);
+  const pill = ks => ks.length ? ks.map(k=>`<span class="pill k-${KC[k]}">${k}</span>`).join(' ') : '<span class="pill k-ok">Đạt</span>';
+  let html = `<div class="tbl-wrap"><table><thead><tr><th>Khoản mục</th><th class="r">Số tiền đề nghị</th><th class="r">Vượt ĐM / thiếu căn cứ</th><th class="r">Cần xác minh</th><th class="r">Ngoài danh mục</th><th>Kết luận</th></tr></thead><tbody>`;
+  for (const r of rows) html += `<tr><td>${r.n}</td><td class="r num">${vnd(r.claim)}</td><td class="r num">${r.rej?vnd(r.rej):'—'}</td><td class="r num">${r.ver?vnd(r.ver):'—'}</td><td class="r num">${r.out?vnd(r.out):'—'}</td><td>${pill(r.kinds)}</td></tr>`;
+  if (day.length) html += `<tr><td>Toàn ngày (phiếu công tác, ngày nghỉ, trùng ngày, tổng chứng từ)</td><td class="r num">—</td><td class="r num">${dRej?vnd(dRej):'—'}</td><td class="r num">${dVer?vnd(dVer):'—'}</td><td class="r num">—</td><td>${pill([...new Set(day.map(f=>f.kind))])}</td></tr>`;
+  html += `</tbody><tfoot><tr><td>Tổng (đã loại trùng theo ngày)</td><td class="r num">${vnd(e.sum.total)}</td><td class="r num">${vnd(e.reject)}</td><td class="r num">${vnd(e.verify)}</td><td class="r num">${vnd(e.outAmt)}</td><td>Đề xuất thanh toán ngay: <b class="num">${vnd(e.payable)}</b></td></tr></tfoot></table></div>`;
+  return html;
+}
+
+/* ---------- hồ sơ nhân viên ---------- */
+function renderDetail(){
+  const e = state.res && state.res.employees.find(x=>x.emp===state.sel);
+  const D = $('#detail');
+  if (!e){ D.innerHTML = `<div class="empty">Chọn một nhân viên ở danh sách bên trái để xem đối chiếu chi tiết.</div>`; return; }
+  const groups = groupFindings(e.findings);
+  const exc = groups.filter(g=>g.kind!=='Hỗ trợ đã duyệt'), sup = groups.filter(g=>g.kind==='Hỗ trợ đã duyệt');
+  const flagDays = {}; for (const f of e.findings){ (flagDays[f.day]=flagDays[f.day]||new Set()).add(f.kind); }
+  const card = g => {
+    const figs = [];
+    figs.push(`Đề nghị <b>${g.claimedTxt!=null?h(g.claimedTxt):money(g.claimed)}${g.unit==='USD'?' USD':''}</b>`);
+    if (g.cap!=null && !g.capVaries) figs.push(`Định mức <b>${money(g.cap)}</b>`);
+    if (g.amount) figs.push(`${g.kind==='Cần xác minh'?'Số tiền chờ xác minh':g.kind==='Hỗ trợ đã duyệt'?'':'Đề xuất loại'} <b style="color:var(--${g.kind==='Cần xác minh'?'amber':'crit'})">${vnd(g.amount)}${g.unit==='USD'?' USD':''}</b>`);
+    return `<div class="find f-${KC[g.kind]}"><span class="bar"></span><div class="body">
+      <div class="top"><span class="pill k-${KC[g.kind]}">${g.kind}</span><span class="ttl">${h(g.item)}</span>${g.n>1?`<span class="note">${g.n} lần</span>`:''}<span class="days">${dayList(g.days)}</span></div>
+      <div class="figs">${figs.join('')}</div>
+      <div class="row2"><div><span class="lbl">Nguyên nhân</span>${h(g.cause)}</div><div><span class="lbl">Biện pháp đề xuất</span>${h(g.action)}</div></div>
+      <div class="basis">Căn cứ: ${h(g.basis)} · Chứng từ: <span class="num">${[...g.docs].map(h).join(', ')}</span></div>
+    </div></div>`;
+  };
+  const wt = e.wt.length ? `<div class="tbl-wrap"><table><thead><tr><th>Số phiếu</th><th>Đi</th><th>Về</th><th>Phương tiện</th><th>Lưu trú</th><th>Mục đích / nơi đến</th><th>Trạng thái</th></tr></thead><tbody>${
+      e.wt.map(f=>`<tr><td class="num">${h(f.doc)}</td><td class="num">${h(f.fromRaw)}</td><td class="num">${h(f.toRaw)}</td><td>${h(f.mode)}</td><td>${h(f.acc)}</td><td>${h(f.purpose)}${f.dest?' · '+h(f.dest):''}</td><td>${h(f.status)}</td></tr>`).join('')}</tbody></table></div>`
+    : `<p class="note">Không có phiếu Work Travel nào của mã NV ${h(e.emp)} trong file tải lên – App bỏ qua đối chiếu lịch trình, giờ đi/đến; vẫn kiểm tra định mức.</p>`;
+  const CK = ['meal','hotel','trans','room','vTrans','ent','other'];
+  const used = CK.filter(c=>e.dayList.some(d=>d.cats[c].amt>0 || d.cats[c].kind));
+  const okDays = e.dayList.filter(d=>CK.every(c=>!d.cats[c].kind || d.cats[c].kind==='Đạt' || d.cats[c].kind==='Hỗ trợ đã duyệt') && !d.dayLevel.length).length;
+  const cell = o => {
+    if (!o.amt && !o.kind) return '<td class="dc empty-c">—</td>';
+    const k = o.kind || 'Đạt', cls = k==='Đạt' ? 'ok' : KC[k];
+    const cap = typeof o.cap==='number' ? 'ĐM '+vnd(o.cap)+(o.per||'') : (o.cap||'');
+    return `<td class="dc"><span class="num amt">${vnd(o.amt)}</span><span class="cap">${h(cap)}</span><span class="pill k-${cls}" title="${h(o.reason||'')}">${h(k)}${o.over?' −'+vnd(o.over):''}</span></td>`;
+  };
+  const ledger = e.dayList.length ? `<div class="tbl-wrap daytbl"><table><thead><tr><th>Ngày</th><th>Phiếu Work Travel</th><th>Địa điểm</th>${used.map(c=>`<th>${CAT_NAME[c]}</th>`).join('')}<th>Ghi chú</th></tr></thead><tbody>${
+    e.dayList.map(d=>{
+      const wtTxt = d.wt.length ? d.wt.map(w=>`<span class="num">${h(w.doc)}</span><span class="cap">${h(w.from)} → ${h(w.to)}</span>`).join('') : `<span class="cap">${e.hasWT?'Không có phiếu – bỏ qua':'—'}</span>`;
+      const notes = d.dayLevel.map(f=>`<div><span class="pill k-${KC[f.kind]}">${h(f.kind)}</span> ${h(f.item)}: ${h(f.cause)}</div>`).concat(d.notes.map(n=>`<div class="cap">${h(n)}</div>`)).join('');
+      return `<tr><td class="num" style="white-space:nowrap">${fmtDay(d.day).slice(0,5)}${d.att?`<span class="cap">${h(d.att)}</span>`:''}</td><td style="min-width:150px">${wtTxt}</td><td style="min-width:170px">${h(d.loc)}</td>${used.map(c=>cell(d.cats[c])).join('')}<td style="min-width:200px">${notes||'<span class="cap">—</span>'}</td></tr>`; }).join('')}</tbody></table></div>`
+    : '<p class="note">Không có ngày phát sinh chi phí.</p>';
+  D.innerHTML = `
+    <div class="d-head"><div class="who"><span class="eyebrow">Hồ sơ đối chiếu</span><h2 style="font-size:18px">${h(e.name)}</h2>
+      <div class="tags"><span class="tag num">${h(e.emp)}</span><span class="tag">Grade ${h(e.grade)}${e.gradeOld?' (cập nhật từ '+h(e.gradeOld)+', xác nhận 12/11/2026)':e.gradeSrc!=='Input_CTP'?' (từ MASTER NHANVIEN)':''}</span><span class="tag">${h(e.dept)}</span><span class="tag">${e.nDays} ngày có phát sinh</span><span class="tag" style="${e.hasWT?'':'border-color:var(--amber);color:var(--amber)'}">${!e.hasWT?'Không có phiếu Work Travel – bỏ qua đối chiếu':`${e.wt.length} phiếu Work Travel · ${e.wtDays}/${e.nDays} ngày có phiếu · ${e.wtMode==='full'?'đối chiếu đầy đủ (Grade A–D)':'chỉ đối chiếu giờ đi/đến (cấp quản lý)'}`}</span><span class="tag">Chứng từ ${e.docs.map(h).join(', ')}</span></div></div>
+      <span class="pill st-${STC[e.status]}" style="font-size:13px;padding:4px 12px">${e.status}</span></div>
+    <div class="d-tiles">
+      <div class="kpi"><span class="eyebrow">Đề nghị</span><span class="v">${vnd(e.sum.total)}</span></div>
+      <div class="kpi crit"><span class="eyebrow">Đề xuất loại</span><span class="v">${vnd(e.reject)}</span></div>
+      <div class="kpi amber"><span class="eyebrow">Chờ xác minh</span><span class="v">${vnd(e.verify)}</span></div>
+      <div class="kpi"><span class="eyebrow">Ngoài danh mục</span><span class="v">${vnd(e.outAmt)}</span></div>
+      <div class="kpi ok"><span class="eyebrow">Thanh toán ngay</span><span class="v">${vnd(e.payable)}</span></div>
+    </div>
+    <div class="sec"><div class="sec-h"><h3>Kết quả kiểm tra theo ngày và loại chi phí</h3><span class="note">${okDays}/${e.dayList.length} ngày đạt toàn bộ · ĐM = định mức áp dụng</span></div>${ledger}</div>
+    <div class="sec"><div class="sec-h"><h3>Đối chiếu theo khoản mục</h3><span class="note">VNĐ · định mức theo Grade ${h(e.grade)}</span></div>${catTable(e)}</div>
+    <div class="sec"><div class="sec-h"><h3>Ngoại lệ, sai sót chi tiết</h3><span class="note">${exc.length} nhóm · ${e.findings.filter(f=>f.kind!=='Hỗ trợ đã duyệt').length} lượt</span></div>
+      ${exc.length ? `<div class="flist">${exc.map(card).join('')}</div>` : `<p class="note">Không có ngoại lệ: mọi khoản thanh toán nằm trong định mức.</p>`}
+      ${sup.length ? `<h3 style="margin-top:6px">Khoản hỗ trợ đã được xác nhận</h3><div class="flist">${sup.map(card).join('')}</div>` : ''}
+    </div>
+    <div class="sec"><details><summary>Phiếu công tác (Work Travel) – ${e.wt.length} phiếu</summary><div style="margin-top:10px">${wt}</div></details></div>`;
+}
+
+/* ---------- chính sách ---------- */
+function renderPolicy(){
+  const P = POLICY;
+  const g = ['A','B','C','D','E','F','G','H','I','J','Q'];
+  const hotel = g.map(x=>{ const o=P.hotel[x]; return o.ALL ? `<tr><td>${x}</td><td colspan="3">Thực tế</td><td>—</td></tr>` : `<tr><td>${x}</td><td class="r num">${vnd(o.HN_HCM)}</td><td class="r num">${o.TIER1?vnd(o.TIER1):'(mức Khác)'}</td><td class="r num">${vnd(o.OTHER)}</td><td class="r num">${P.cgfHotel[x]?vnd(P.cgfHotel[x]):'—'}</td></tr>`; }).join('');
+  $('#polver').textContent = P.version;
+  $('#policy').innerHTML = `
+  <div><h3>Phụ cấp ăn (đ/ngày) và điều kiện giờ</h3><div class="tbl-wrap"><table><thead><tr><th>Grade</th><th class="r">Mức/ngày</th><th class="r">Sáng 20%</th><th class="r">Trưa 40%</th><th class="r">Tối 40%</th></tr></thead><tbody>
+    ${[['A–D',150000],['E–F',180000],['G–I',250000],['J, Q',300000]].map(([n,v])=>`<tr><td>${n}</td><td class="r num">${vnd(v)}</td><td class="r num">${vnd(v*.2)}</td><td class="r num">${vnd(v*.4)}</td><td class="r num">${vnd(v*.4)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="note">Tổng tiền ăn ngày ≤ định mức Grade là đạt (chỉ đạo 12/11/2026). Chỉ khi vượt định mức, App ghi thêm thông tin giờ đi/đến theo phiếu (sáng/trưa/tối: đi trước 06:00 / 11:00 / 17:00; về sau 08:00 / 13:00 / 20:00) để tham khảo.</p></div>
+  <div><h3>Khách sạn (đ/đêm)</h3><div class="tbl-wrap"><table><thead><tr><th>Grade</th><th class="r">HN/HCM</th><th class="r">TP loại 1</th><th class="r">Khác</th><th class="r">CGF cố định</th></tr></thead><tbody>${hotel}</tbody></table></div>
+    <p class="note">TP loại 1: ${P.tier1.join(', ')}. Đà Nẵng, Huế áp mức “Khác”. CGF (Swine Farm Development, Farm Development): Grade C, D tối đa 6 đêm/tháng. Địa điểm ghi nhiều khu vực: ≤ mức cao nhất áp dụng là đạt, > mức cao nhất là vượt (chỉ đạo 12/11/2026).</p></div>
+  <div><h3>Đi lại, tiếp khách</h3><p class="note">Đi lại Grade C–F: 120.000 đ/ngày; đi xa ≥ 20 km: 2.000 đ/km (lấy mức cao hơn). Grade khác có khai đi lại: ngoài danh mục.</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Grade</th><th>Phòng ban</th><th class="r">Mức/chứng từ</th></tr></thead><tbody>${P.ent.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td class="r num">${x[2]==='Actual'?'Thực tế':vnd(x[2])}</td></tr>`).join('')}</tbody></table></div></div>
+  <div><h3>Nước ngoài (USD) và hỗ trợ đã xác nhận</h3><div class="tbl-wrap"><table><thead><tr><th>Grade</th><th class="r">Ăn/ngày</th><th class="r">KS/đêm</th><th class="r">Intl. surcharge/ngày</th></tr></thead><tbody>
+    ${[['A–D',60,150,40],['E–F',60,200,50],['G–I',85,250,60]].map(r=>`<tr><td>${r[0]}</td><td class="r num">${r[1]}</td><td class="r num">${r[2]}</td><td class="r num">${r[3]}</td></tr>`).join('')}</tbody></table></div>
+    <ul class="warnlist note"><li>Nguyễn Huy Tài (mã 10111566): hỗ trợ nhà trọ 2.000.000 đ/tháng, cộng ngoài định mức Grade.</li><li>VAT Transportation (vé xe): thanh toán theo vé đã kê khai, ngoài định mức đi lại; cần vé/hóa đơn đính kèm.</li></ul>
+    <h3>Giả định đang dùng</h3><ul class="warnlist note">
+      <li>Nhận diện chuyến nước ngoài theo địa danh; số tiền ≤ 1.000 coi là USD, lớn hơn quy đổi bằng tỷ giá nhập ở trên.</li>
+      <li>International surcharge đối chiếu với cột Incidental.</li>
+      <li>Ngày không có phiếu Work Travel bao phủ: bỏ qua đối chiếu phiếu (mọi Grade), chỉ kiểm tra định mức.</li>
+      <li>Mọi khoản thanh toán ≤ định mức đều Đạt (chỉ đạo 12/11/2026). Chỉ phần vượt định mức, khoản ngoài danh mục, ngày nghỉ phép, trùng chứng từ và sai số học mới là ngoại lệ.</li>
+      <li>Grade C, D (và A, B) có phiếu: lịch trình (tỉnh/thành so nơi đến), hình thức lưu trú, ngày về, trạng thái và số phiếu được đối chiếu và ghi vào cột Ghi chú để tham khảo; không làm thay đổi kết quả Đạt.</li>
+      <li>Cấp quản lý E, F, G, H, I (và J, Q): bỏ qua kiểm tra Work Travel; ngày có phiếu chỉ hiển thị giờ đi, giờ đến để tham khảo.</li>
+      <li>Grade cập nhật theo xác nhận 12/11/2026: Luong Van Hung (10027761), Hoang Xuan Tinh (10003245) từ F lên G.</li>
+      <li>Grade lỗi/trống trên Input_CTP được lấy từ MASTER NHANVIEN và ghi rõ nguồn.</li>
+      <li>Nhà trọ của nhân viên khác, Incidental trong nước, VAT Others: ngoài danh mục, cần xác nhận.</li></ul></div>`;
+}
+
+/* ---------- xuất / sao chép ---------- */
+function reportRows(){
+  const out = [];
+  for (const e of state.res.employees) for (const f of e.findings)
+    out.push({'Mã NV':e.emp,'Họ tên':e.name,'Grade':e.grade,'Phòng ban':e.dept,'Ngày':fmtDay(f.day),'Số CT':f.doc,'Số phiếu CT':f.req,'Địa điểm':f.loc,'Khoản mục':f.item,
+      'Số tiền đề nghị':f.claimed,'Định mức':f.cap,'Số tiền ảnh hưởng':f.amount||0,'Đơn vị':f.unit||'VND','Phân loại':f.kind,'Nguyên nhân':f.cause,'Biện pháp đề xuất':f.action,'Căn cứ':f.basis});
+  return out;
+}
+async function exportXlsx(){
+  if (!state.res) return;
+  try{
+    const wb = XLSX.utils.book_new();
+    const emp = state.res.employees.map(e=>({'Mã NV':e.emp,'Họ tên':e.name,'Grade':e.grade,'Nguồn Grade':e.gradeSrc,'Phòng ban':e.dept,'Số ngày':e.nDays,'Tiền ăn':e.sum.meal,'Khách sạn':e.sum.hotel,'Nhà trọ':e.sum.room,'Đi lại':e.sum.trans,'VAT vé xe':e.sum.vTrans,'Tiếp khách':e.sum.ent,'Khác':e.sum.incid+e.sum.vOther,'Tổng đề nghị':e.sum.total,'Đề xuất loại':e.reject,'Chờ xác minh':e.verify,'Ngoài danh mục':e.outAmt,'Thanh toán ngay':e.payable,'Kết luận':e.status,'Số ngoại lệ':e.findings.filter(f=>f.kind!=='Hỗ trợ đã duyệt').length}));
+    const ws1 = XLSX.utils.json_to_sheet(emp); ws1['!cols'] = [{wch:11},{wch:24},{wch:6},{wch:16},{wch:18}].concat(Array(15).fill({wch:13}));
+    const ws2 = XLSX.utils.json_to_sheet(reportRows()); ws2['!cols'] = [{wch:11},{wch:24},{wch:6},{wch:16},{wch:11},{wch:10},{wch:11},{wch:34},{wch:26},{wch:13},{wch:12},{wch:13},{wch:6},{wch:15},{wch:60},{wch:60},{wch:40}];
+    // Kết quả kiểm tra theo ngày × loại chi phí (không có cột Total cost)
+    const dayRows = [];
+    const CKX = ['meal','hotel','trans','room','vTrans','ent','other'];
+    for (const e of state.res.employees) for (const d of e.dayList){
+      const o = {'Mã NV':e.emp,'Họ tên':e.name,'Grade':e.grade,'Phòng ban':e.dept,'Ngày':fmtDay(d.day),'Số CT':d.docs,'Phiếu khai':d.req,'Địa điểm':d.loc,
+        'Phiếu WT':d.wt.map(w=>w.doc).join(', ')||(e.hasWT?'Không có phiếu – bỏ qua':''),'Đi lúc':d.wt.map(w=>w.from).join(' | '),'Về lúc':d.wt.map(w=>w.to).join(' | ')};
+      for (const c of CKX){ const x = d.cats[c];
+        o[CAT_NAME[c]+' – số tiền'] = x.amt || 0;
+        o[CAT_NAME[c]+' – định mức'] = (x.amt||x.kind) ? (typeof x.cap==='number' ? x.cap : x.cap) : '';
+        o[CAT_NAME[c]+' – kết quả'] = x.kind || ''; }
+      o['Ghi chú'] = d.dayLevel.map(f=>f.kind+' – '+f.item+': '+f.cause).concat(d.notes).join(' | ');
+      dayRows.push(o); }
+    const ws3 = XLSX.utils.json_to_sheet(dayRows); ws3['!cols'] = [{wch:11},{wch:24},{wch:6},{wch:16},{wch:11},{wch:10},{wch:10},{wch:34},{wch:14},{wch:17},{wch:17}].concat(Array(21).fill({wch:13})).concat([{wch:70}]);
+    ws3['!autofilter'] = {ref: XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:dayRows.length, c:Object.keys(dayRows[0]||{a:1}).length-1}})};
+    const s = state.res.stats;
+    const sum = [['KẾT QUẢ ĐỐI SOÁT CÔNG TÁC PHÍ'],['File',state.sample?'Dữ liệu ví dụ':state.fileName],['Kỳ dữ liệu',fmtDay(s.from)+' – '+fmtDay(s.to)],['Chính sách',POLICY.version],[],
+      ['Số nhân viên',s.emps],['NV có phiếu Work Travel (đối chiếu lịch trình)',s.withWT],['NV không có phiếu Work Travel (bỏ qua đối chiếu phiếu)',s.noWT],['Số dòng hợp lệ',s.rows],['Dòng bị loại (Grade lỗi)',s.excluded],[],
+      ['Tổng đề nghị',s.total],['Đề xuất loại',s.reject],['Chờ xác minh',s.verify],['Đề xuất thanh toán ngay',state.res.employees.reduce((a,e)=>a+e.payable,0)],[],
+      ['NV sai lệch',s.bad],['NV cần xác minh',s.warn],['NV đạt',s.ok]];
+    const ws0 = XLSX.utils.aoa_to_sheet(sum); ws0['!cols'] = [{wch:52},{wch:40}];
+    XLSX.utils.book_append_sheet(wb, ws0, 'TONG_HOP');
+    XLSX.utils.book_append_sheet(wb, ws1, 'THEO_NHAN_VIEN'); XLSX.utils.book_append_sheet(wb, ws2, 'NGOAI_LE_CHI_TIET'); XLSX.utils.book_append_sheet(wb, ws3, 'KET_QUA_THEO_NGAY');
+    const name = 'KetQua_DoiSoat_CTP_' + (state.sample?'ViDu':fmtDay(s.to).slice(3).replace('/','-')) + '.xlsx';
+    const buf = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const dl = await (window.claude && window.claude.use ? window.claude.use('downloads') : null);
+    if (dl){
+      try{ await dl.save({filename:name, data:new Blob([buf])}); toast('Đã lưu '+name); }
+      catch(err){ if (err && err.code==='declined') toast('Đã hủy lưu file.'); else if (err && err.code==='rate_limited') toast('Đang có hộp thoại lưu file, thử lại sau.'); else toast('Không lưu được file ('+(err&&err.code||'lỗi')+').'); }
+    } else { XLSX.writeFile(wb, name); toast('Đã tạo file '+name); }
+  } catch(err){ toast('Không xuất được file Excel: '+(err.message||err)); }
+}
+function copyReport(){
+  const e = state.res && state.res.employees.find(x=>x.emp===state.sel); if (!e) return;
+  const lines = [`ĐỐI SOÁT CÔNG TÁC PHÍ – ${e.name} (${e.emp}) – Grade ${e.grade} – ${e.dept}`,
+    `Đề nghị\t${vnd(e.sum.total)}`,`Đề xuất loại\t${vnd(e.reject)}`,`Chờ xác minh\t${vnd(e.verify)}`,`Ngoài danh mục\t${vnd(e.outAmt)}`,`Thanh toán ngay\t${vnd(e.payable)}`,`Kết luận\t${e.status}`,'',
+    ['Phân loại','Khoản mục','Ngày','Đề nghị','Định mức','Ảnh hưởng','Nguyên nhân','Biện pháp đề xuất','Căn cứ'].join('\t')];
+  for (const g of groupFindings(e.findings)) lines.push([g.kind,g.item,dayList(g.days),g.claimedTxt!=null?g.claimedTxt:vnd(g.claimed),g.capVaries?'nhiều mức':(g.cap==null?'':typeof g.cap==='number'?vnd(g.cap):g.cap),vnd(g.amount),g.cause,g.action,g.basis].join('\t'));
+  const txt = lines.join('\n');
+  const done = () => toast('Đã sao chép báo cáo của '+e.name);
+  try{ navigator.clipboard.writeText(txt).then(done, ()=>fallbackCopy(txt, done)); } catch(_){ fallbackCopy(txt, done); }
+}
+function fallbackCopy(txt, done){ const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(_){ toast('Không sao chép được – hãy dùng Xuất Excel.'); } ta.remove(); }
+let tt; function toast(t){ let el = document.querySelector('.toast'); if (!el){ el = document.createElement('div'); el.className='toast'; el.setAttribute('role','status'); document.body.appendChild(el); } el.textContent = t; el.hidden = false; clearTimeout(tt); tt = setTimeout(()=>{ el.hidden = true; }, 2600); }
+
+/* ---------- sự kiện ---------- */
+$('#btnPick').onclick = () => $('#file').click();
+$('#file').onchange = e => { if (e.target.files[0]) readFile(e.target.files[0]); e.target.value=''; };
+const drop = $('#drop');
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t, e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e=>{ const f = e.dataTransfer.files[0]; if (f) readFile(f); });
+$('#btnSample').onclick = () => { state.book = sampleBook(); state.sample = true; state.sel = null; run(); };
+$('#btnRun').onclick = () => { if (!state.pending) return; state.book = state.pending; state.sample = false; state.sel = null; state.filter = 'all'; run(); toast('Đã kiểm tra xong '+state.res.stats.emps+' nhân viên'); };
+$('#fx').addEventListener('change', () => { if (state.res && state.book) run(); });
+$('#q').addEventListener('input', e => { state.q = e.target.value; renderList(); });
+$('#sort').addEventListener('change', e => { state.sort = e.target.value; renderList(); });
+$('#chips').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; state.filter = b.dataset.f; renderChips(); renderList(); });
+const pick = li => { state.sel = li.dataset.emp; renderList(); renderDetail(); if (window.innerWidth<=900) $('#detail').scrollIntoView({block:'start'}); };
+$('#list').addEventListener('click', e => { const li = e.target.closest('.emp'); if (li) pick(li); });
+$('#list').addEventListener('keydown', e => { const li = e.target.closest('.emp'); if (!li) return;
+  if (e.key==='Enter'||e.key===' '){ e.preventDefault(); pick(li); }
+  if (e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); const n = e.key==='ArrowDown'?li.nextElementSibling:li.previousElementSibling; if (n) n.focus(); } });
+$('#btnExport').onclick = exportXlsx;
+$('#btnCopy').onclick = copyReport;
+
+renderPolicy();
+state.book = sampleBook(); state.sample = true; run();
+})();
+</script>
+
+</body></html>
